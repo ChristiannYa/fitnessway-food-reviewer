@@ -16,14 +16,16 @@ export function Login() {
                 return;
             }
 
-            // Store only the access token because this is the responsibility of 
+            // Store only the access token because this is the responsibility of
             // the client
             accessTokenStore.setAccessToken(ctx.data.accessToken);
 
             await router.invalidate();
             router.navigate({ to: "/" });
         },
-        onError: (error) => { console.log(error.message); }
+        onError: (error) => {
+            console.log(error.message);
+        }
     });
 
     const handleLogin = (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -44,10 +46,7 @@ export function Login() {
         <div className="fixed inset-0 bg-zinc-800 flex items-start justify-center p-8">
             <div className="bg-zinc-700 p-8 rounded-lg shadow-lg">
                 <h1 className="text-2xl font-bold mb-4">Login</h1>
-                <form
-                    onSubmit={(e) => handleLogin(e)}
-                    className="space-y-4"
-                >
+                <form onSubmit={(e) => handleLogin(e)} className="space-y-4">
                     <div>
                         <label htmlFor="email" className="block text-xs">
                             Email
@@ -72,7 +71,7 @@ export function Login() {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-cyan-800  text-white rounded-sm py-2 font-black uppercase"
+                        className="w-full bg-emerald  text-white rounded-sm py-2 font-black uppercase"
                         disabled={loginMutation.status === "pending"}
                     >
                         {loginMutation.status === "pending" ? "..." : "Login"}

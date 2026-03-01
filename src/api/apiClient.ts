@@ -2,7 +2,7 @@ import { envValues } from "@/config/env";
 import { catchingErrorT } from "@/errors/errorCatching";
 import { RequestBaseError } from "@/errors/requestErrors";
 import { accessTokenStore, AccessTokenStore } from "@/store/accessTokenStore";
-import { refreshAccessTokenServerFn } from "./auth/authApi";
+import { refreshAccessTokenServerFn } from "@/api/auth/authApi";
 import { toCamelCase, toSnakeCase } from "@/utils/textCases";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
