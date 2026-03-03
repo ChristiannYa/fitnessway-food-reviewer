@@ -99,7 +99,7 @@ export default function Header() {
 					{/* Logout Button */}
 					<button
 						onClick={handleLogout}
-						className={`${navConfig.itemBaseClass} justify-center  bg-red-600  hover:bg-red-500 w-full`}
+						className={`${navConfig.itemBaseClass} justify-center  bg-red-600  hover:bg-red-500 w-full mt-4`}
 					>
 						Log out
 					</button>
@@ -130,9 +130,9 @@ const Navigation = ({
 	if (isError) return null;
 
 	return (
-		<>
+		<div className="h-full flex flex-col">
 			{/* Side menu - Links */}
-			<nav>
+			<nav className="grow">
 				{navConfig.items.map((item) => {
 					const Icon = item.icon;
 
@@ -155,6 +155,6 @@ const Navigation = ({
 
 			{/* User - Name */}
 			<p className="text-white font-medium mx-auto">{userName}</p>
-		</>
+		</div>
 	);
 };

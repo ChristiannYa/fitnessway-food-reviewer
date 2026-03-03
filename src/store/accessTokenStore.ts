@@ -1,14 +1,29 @@
 export class AccessTokenStore {
+	readonly #isDev = import.meta.env.DEV;
 	#accessToken: string | null = null;
 
+	constructor() {
+		if (this.#isDev) {
+			this.#accessToken = sessionStorage.getItem("dev_access_token");
+		}
+	}
+
 	getAccessToken = () => this.#accessToken;
+
 	setAccessToken = (token: string) => {
-		console.log(`setting access token: ${token.slice(-10)}`);
 		this.#accessToken = token;
+
+		if (this.#isDev) {
+			sessionStorage.setItem("dev_access_token", token);
+		}
 	};
 
 	clearAccessToken = () => {
 		this.#accessToken = null;
+
+		if (this.#isDev) {
+			sessionStorage.removeItem("dev_access_token");
+		}
 	};
 }
 

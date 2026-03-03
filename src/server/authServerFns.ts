@@ -24,10 +24,7 @@ export const refreshAccessTokenServerFn = createServerFn({
 		body: body
 	});
 
-	if (!res.success) {
-		console.log(`error refreshing access token: ${res.message}`);
-		return null;
-	}
+	if (!res.success) return null;
 
 	// Return the access token so that the client stores it in memory
 	return res.data.accessToken;
