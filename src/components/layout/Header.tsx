@@ -4,9 +4,26 @@ import { Home, Menu, ArrowLeftIcon, ClipboardList } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { logoutServerFn } from "@/server/authServerFns";
 import { accessTokenStore } from "@/store/accessTokenStore";
+import { useUserQuery } from "@/hooks/queries/userQueries";
+import { Spinner } from "../elements/Spinner";
+
+const navConfig = {
+	items: [
+		{ to: "/home", label: "Home", icon: Home },
+		{ to: "/pending", label: "Pending", icon: ClipboardList }
+	],
+	itemBaseClass:
+		"flex items-center gap-3 p-3 mb-2 font-medium rounded-lg transition-colors"
+};
 
 export default function Header() {
 	const router = useRouter();
+
+	const {
+		data: user,
+		isPending: isUserPending,
+		isError: isUserError
+	} = useUserQuery();
 
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -70,33 +87,19 @@ export default function Header() {
 				</div>
 
 				<div className="p-4 h-full flex flex-col">
-					{/* Side menu - Links */}
-					<nav className="grow">
-						{navConfig.items.map((item) => {
-							const Icon = item.icon;
+					<div className="grow">
+						<Navigation
+							userName={user?.data?.user.name ?? ""}
+							isPending={isUserPending}
+							isError={isUserError}
+							toggleMenu={toggleMenu}
+						/>
+					</div>
 
-							return (
-								<Link
-									key={item.to}
-									to={item.to}
-									onClick={toggleMenu}
-									className={`${navConfig.baseClass} hover:bg-metal`}
-									activeProps={{
-										className: `${navConfig.baseClass} bg-emerald hover:bg-sibling-emerald`
-									}}
-								>
-									<Icon size={20} />
-									<span className="font-medium">
-										{item.label}
-									</span>
-								</Link>
-							);
-						})}
-					</nav>
-
+					{/* Logout Button */}
 					<button
 						onClick={handleLogout}
-						className={`${navConfig.baseClass} justify-center  bg-red-600  hover:bg-red-500 w-full`}
+						className={`${navConfig.itemBaseClass} justify-center  bg-red-600  hover:bg-red-500 w-full`}
 					>
 						Log out
 					</button>
@@ -106,10 +109,52 @@ export default function Header() {
 	);
 }
 
-const navConfig = {
-	items: [
-		{ to: "/home", label: "Home", icon: Home },
-		{ to: "/pending", label: "Pending", icon: ClipboardList }
-	],
-	baseClass: "flex items-center gap-3 p-3 mb-2 rounded-lg transition-colors"
+const Navigation = ({
+	userName,
+	isPending,
+	isError,
+	toggleMenu
+}: {
+	userName: string;
+	isPending: boolean;
+	isError: boolean;
+	toggleMenu: () => void;
+}) => {
+	if (isPending)
+		return (
+			<div className="mx-auto">
+				<Spinner size={28} />
+			</div>
+		);
+
+	if (isError) return null;
+
+	return (
+		<>
+			{/* Side menu - Links */}
+			<nav>
+				{navConfig.items.map((item) => {
+					const Icon = item.icon;
+
+					return (
+						<Link
+							key={item.to}
+							to={item.to}
+							onClick={toggleMenu}
+							className={`${navConfig.itemBaseClass} hover:bg-metal`}
+							activeProps={{
+								className: `${navConfig.itemBaseClass} bg-emerald hover:bg-sibling-emerald`
+							}}
+						>
+							<Icon size={20} />
+							{item.label}
+						</Link>
+					);
+				})}
+			</nav>
+
+			{/* User - Name */}
+			<p className="text-white font-medium mx-auto">{userName}</p>
+		</>
+	);
 };

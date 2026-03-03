@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import type { UserRes } from "@/types/userTypes";
 import { apiClientApp } from "@/api/apiClient";
+import { useTokenGuardQuery } from "../useTokenGuardQuery";
 
-export const useUser = () =>
-	useQuery({
+export const useUserQuery = () =>
+	useTokenGuardQuery({
 		queryKey: ["user"],
 		queryFn: () =>
 			apiClientApp.req<UserRes>({

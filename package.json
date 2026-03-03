@@ -27,6 +27,7 @@
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-spinner": "^0.2.7",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
@@ -37,7 +38,7 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "^5.1.4",
     "jsdom": "^27.0.0",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",

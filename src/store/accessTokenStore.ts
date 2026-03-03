@@ -1,10 +1,15 @@
 export class AccessTokenStore {
-    #accessToken: string | null = null;
+	#accessToken: string | null = null;
 
-    getAccessToken = () => this.#accessToken;
-    setAccessToken = (token: string) => { this.#accessToken = token; };
+	getAccessToken = () => this.#accessToken;
+	setAccessToken = (token: string) => {
+		console.log(`setting access token: ${token.slice(-10)}`);
+		this.#accessToken = token;
+	};
 
-    clearAccessToken = () => { this.#accessToken = null; };
+	clearAccessToken = () => {
+		this.#accessToken = null;
+	};
 }
 
 export const accessTokenStore = new AccessTokenStore();

@@ -37,10 +37,13 @@ class ApiClient {
 		headers.set("Content-Type", "application/json");
 
 		if (this.accessTokenStore) {
-			headers.set(
-				"Authorization",
-				`Bearer ${this.accessTokenStore.getAccessToken()}`
+			const accessToken = this.accessTokenStore.getAccessToken();
+
+			console.log(
+				`adding access token to the headers: ${accessToken?.slice(-10)}`
 			);
+
+			headers.set("Authorization", `Bearer ${accessToken}`);
 		}
 
 		if (req.params) {
@@ -87,6 +90,9 @@ class ApiClient {
 				// The refresh handler lives outside ApiClient because reading httpOnly cookies
 				// requires a server function — something ApiClient cannot do directly
 				const newAccessToken = await this.refreshHandler();
+				console.log(
+					`new access token from the server: ${newAccessToken?.slice(-10)}`
+				);
 
 				// Store only the access token
 				if (newAccessToken)
