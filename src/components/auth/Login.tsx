@@ -78,7 +78,7 @@ export function Login() {
 						{loginMutation.status === "pending" ? "..." : "LOGIN"}
 					</button>
 				</form>
-				{loginMutation?.isError && (
+				{loginMutation.isError && (
 					<p className="text-red-500 text-center text-sm mt-2">
 						Error logging in
 					</p>

@@ -98,6 +98,7 @@ class ApiClient {
 					method,
 					path,
 					body,
+					params,
 					isRetry: true
 				});
 			}
