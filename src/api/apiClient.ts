@@ -1,7 +1,8 @@
 import { envValues } from "@/config/env";
 import { catchingErrorT } from "@/errors/errorCatching";
 import { RequestBaseError } from "@/errors/requestErrors";
-import { accessTokenStore, AccessTokenStore } from "@/store/accessTokenStore";
+import type { AccessTokenStore } from "@/store/accessTokenStore";
+import { accessTokenStore as accessTokenStoreInstance } from "@/store/accessTokenStore";
 import { refreshAccessTokenServerFn } from "@/server/authServerFns";
 import { toCamelCase, toSnakeCase } from "@/utils/textCases";
 
@@ -132,6 +133,6 @@ export const apiClientPub = new ApiClient(envValues.apiBaseUrl);
 
 export const apiClientApp = new ApiClient(
 	envValues.apiBaseUrl,
-	accessTokenStore,
+	accessTokenStoreInstance,
 	refreshAccessTokenServerFn
 );

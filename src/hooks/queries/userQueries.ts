@@ -1,6 +1,6 @@
 import type { UserRes } from "@/types/userTypes";
 import { apiClientApp } from "@/api/apiClient";
-import { useTokenGuardQuery } from "../useTokenGuardQuery";
+import { useTokenGuardQuery } from "@/hooks/useTokenGuardQuery";
 
 export const useUserQuery = () =>
 	useTokenGuardQuery({

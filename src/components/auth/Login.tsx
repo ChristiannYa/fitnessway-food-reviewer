@@ -43,8 +43,8 @@ export function Login() {
 	};
 
 	return (
-		<div className="fixed inset-0 bg-zinc-800 flex items-start justify-center p-8">
-			<div className="bg-zinc-700 p-8 rounded-lg shadow-lg">
+		<div className="fixed inset-0 bg-charcoal flex items-start justify-center p-8">
+			<div className="border border-smoke bg-charcoal p-8 rounded-lg shadow-lg">
 				<h1 className="text-2xl font-bold mb-4">Login</h1>
 				<form onSubmit={(e) => handleLogin(e)} className="space-y-4">
 					<div>
@@ -71,12 +71,24 @@ export function Login() {
 					</div>
 					<button
 						type="submit"
-						className="w-full bg-emerald  text-white rounded-sm py-2 font-black uppercase"
+						className="w-full bg-dry-green  text-white rounded-sm py-2 font-black
+                                    transition-colors hover:cursor-pointer hover:bg-wet-green"
 						disabled={loginMutation.status === "pending"}
 					>
-						{loginMutation.status === "pending" ? "..." : "Login"}
+						{loginMutation.status === "pending" ? "..." : "LOGIN"}
 					</button>
 				</form>
+				{loginMutation?.isError && (
+					<p className="text-red-500 text-center text-sm mt-2">
+						Error logging in
+					</p>
+				)}
+				{loginMutation.data?.message.toLowerCase() ===
+					"invalid email or password" && (
+					<p className="text-mist text-center text-sm mt-2">
+						Invalid email or password
+					</p>
+				)}
 			</div>
 		</div>
 	);
