@@ -1,4 +1,5 @@
 import { apiClientApp } from "@/api/apiClient";
+import { PAGINATION_LIMIT } from "@/constants";
 import { useTokenGuardQuery } from "@/hooks/useTokenGuardQuery";
 import type {
 	PendingFoodsByUserIdRes,
@@ -17,7 +18,7 @@ export const usePendingFoodsByUserIdQuery = (
 				method: "GET",
 				path: "/food/pending/find-by/user-id",
 				params: {
-					limit: "10",
+					limit: `${PAGINATION_LIMIT}`,
 					offset: `${offset}`,
 					userId: userId
 				}
@@ -37,7 +38,7 @@ export const usePendingFoodsByuserTypeQuery = (
 				method: "GET",
 				path: "/food/pending/find-by/user-type",
 				params: {
-					limit: "10",
+					limit: `${PAGINATION_LIMIT}`,
 					offset: `${offset}`,
 					userType: userType
 				}

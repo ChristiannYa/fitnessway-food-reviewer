@@ -1,4 +1,4 @@
-import { type CookieSerializeOptions } from "cookie-es";
+import type { CookieSerializeOptions } from "cookie-es";
 
 type cookieConfig = {
 	name: string;

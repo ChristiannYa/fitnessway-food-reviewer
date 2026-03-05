@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { SearchOption } from "./SearchOption";
-import { UserIdSearch } from "./UserIdSearch";
+import { SearchOption } from "@/components/app/home/SearchOption";
+import { UserIdSearch } from "@/components/app/home/UserIdSearch";
 
 const SEARCH_OPTIONS = ["User Type", "User ID"] as const;
 
