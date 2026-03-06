@@ -1,7 +1,9 @@
-import type { PendingFoodStatus } from "@/types/foodTypes";
+import type { FoodBase, PendingFoodStatus } from "@/types/foodTypes";
 
-export const getPendingFoodStatusColor = (foodStatus: PendingFoodStatus): string => {
-	switch (foodStatus) {
+export const isReviewed = (status: PendingFoodStatus): boolean => status !== "PENDING";
+
+export const getPendingFoodStatusColor = (status: PendingFoodStatus): string => {
+	switch (status) {
 		case "APPROVED":
 			return "text-emerald-500";
 		case "PENDING":
@@ -10,3 +12,6 @@ export const getPendingFoodStatusColor = (foodStatus: PendingFoodStatus): string
 			return "text-red-500";
 	}
 };
+
+export const getAmountPerServingView = (food: FoodBase): string =>
+	`${food.amountPerServing} ${food.servingUnit.toLowerCase()}`;

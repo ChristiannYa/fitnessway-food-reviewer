@@ -13,6 +13,16 @@ code {
 	font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
+@layer utilities {
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
+	}
+}
+
 @theme {
 	--color-dry-green: #088f8f;
 	--color-wet-green: #067070;
@@ -20,6 +30,7 @@ code {
 	--color-metal: #3f3f46;
 	--color-mist: #d1d5dc;
 	--color-smoke: #6a7282;
+	--color-burnt: #27272a;
 
 	--breakpoint-xs: 32rem;
 }

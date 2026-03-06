@@ -24,7 +24,7 @@ export type NutrientData = {
 };
 
 export type NutrientInFood = {
-	data: NutrientData;
+	nutrientData: NutrientData;
 	amount: number;
 };
 
