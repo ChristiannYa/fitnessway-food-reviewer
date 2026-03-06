@@ -10,7 +10,7 @@ export function Home() {
 	const [searchOption, setSearchOption] = useState<SearchOptions | null>(null);
 
 	return (
-		<div className="min-h-screen bg-charcoal text-mist flex flex-col items-center p-4">
+		<div className="min-h-screen bg-charcoal text-mist flex flex-col items-center pt-12">
 			<div className="flex flex-col items-center gap-2 w-80">
 				<div className="flex gap-x-4">
 					{Object.values(SEARCH_OPTIONS).map((option) => {
