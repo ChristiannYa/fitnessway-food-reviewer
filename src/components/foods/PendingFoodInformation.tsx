@@ -73,13 +73,13 @@ const PendingFoodHeader = ({
 	return (
 		<div
 			className="flex items-center justify-between px-4 py-3 border-b border-smoke 
-                           border-dotted text-lg"
+                       border-dotted text-lg"
 		>
 			<p>{formatIsoDate(pendingFood.createdAt)}</p>
 			<div className="flex flex-col items-center gap-0">
 				<p
 					className={`${getPendingFoodStatusColor(pendingFood.status)} font-bold 
-                                    leading-tight`}
+                                leading-tight`}
 				>
 					{pendingFood.status}
 				</p>
@@ -148,7 +148,7 @@ const RejectionReason = ({
 		<div
 			onClick={onClose}
 			className="flex flex-col items-center gap-2 w-full h-full p-3 mx-auto absolute  
-                             bg-mist/10 rounded-md backdrop-blur-md overflow-auto no-scrollbar z-20"
+                     bg-mist/10 rounded-md backdrop-blur-md overflow-auto no-scrollbar z-20"
 		>
 			<h2 className="text-lg font-medium leading-tight">Rejection Reason</h2>
 			<p className="text-center">{reason}</p>
@@ -174,17 +174,14 @@ const RejectionWriting = ({
 
 	return (
 		<div className="flex flex-col p-3 w-full h-full absolute bg-black/50 backdrop-blur-lg">
-			{!hasClickedRejected && (
-				<h2 className="text-xl font-medium text-center">REJECTION REASON</h2>
-			)}
 			<div className="grow my-4 w-full relative bg-smoke/40 border border-smoke rounded-lg">
 				{!hasClickedRejected ? (
 					<textarea
 						value={rejectionReason}
 						onChange={(e) => setRejectionreason(e.target.value)}
-						placeholder="..."
+						placeholder="Rejection reason..."
 						className="w-full h-full p-4 focus:outline-none focus:ring-1 focus:ring-mist 
-                                   resize-none"
+                                   rounded-lg resize-none"
 					/>
 				) : (
 					<div

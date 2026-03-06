@@ -1,16 +1,7 @@
 import { LoginReqSchema } from "@/schemas/authSchema";
-import {
-	type LoginRes,
-	type LogoutReq,
-	type RefreshReq,
-	type RefreshRes
-} from "@/types/authTypes";
+import type { LoginRes, LogoutReq, RefreshReq, RefreshRes } from "@/types/authTypes";
 import { createServerFn } from "@tanstack/react-start";
-import {
-	getCookie,
-	setCookie,
-	deleteCookie
-} from "@tanstack/react-start/server";
+import { getCookie, setCookie, deleteCookie } from "@tanstack/react-start/server";
 import { apiClientPub } from "@/api/apiClient";
 import cookies from "@/config/cookies";
 
@@ -43,11 +34,7 @@ export const loginServerFn = createServerFn({ method: "POST" })
 
 		// Store only the refresh token in cookies because this is the responsibility
 		// of a server function only
-		setCookie(
-			cookies.refresh.name,
-			res.data.refreshToken,
-			cookies.refresh.options
-		);
+		setCookie(cookies.refresh.name, res.data.refreshToken, cookies.refresh.options);
 
 		// Return the access token so that the client stores it in memory
 		return {
@@ -56,27 +43,25 @@ export const loginServerFn = createServerFn({ method: "POST" })
 		};
 	});
 
-export const logoutServerFn = createServerFn({ method: "POST" }).handler(
-	async () => {
-		const body: LogoutReq = {
-			refreshToken: getCookie("refreshToken") ?? ""
-		};
-		const res = await apiClientPub.req<never>({
-			method: "POST",
-			path: "/auth/logout",
-			body: body
-		});
+export const logoutServerFn = createServerFn({ method: "POST" }).handler(async () => {
+	const body: LogoutReq = {
+		refreshToken: getCookie("refreshToken") ?? ""
+	};
+	const res = await apiClientPub.req<never>({
+		method: "POST",
+		path: "/auth/logout",
+		body: body
+	});
 
-		// Clear the cookie regardles of the response.
-		// Client should be responsible of deleting the access token
-		deleteCookie(cookies.refresh.name);
+	// Clear the cookie regardles of the response.
+	// Client should be responsible of deleting the access token
+	deleteCookie(cookies.refresh.name);
 
-		if (!res.success) return res;
+	if (!res.success) return res;
 
-		return {
-			success: true,
-			message: res.message,
-			data: null
-		};
-	}
-);
+	return {
+		success: true,
+		message: res.message,
+		data: null
+	};
+});
