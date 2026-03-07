@@ -9,7 +9,7 @@ import { AvailablePages } from "@/components/elements/AvailablePages";
 
 export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 	const [offset, setOffset] = useState(0);
-	const [userIdQueryParam, setUserIdQueryParam] = useState<string | null>(null);
+	const [userIdQueryParam, setUserIdQueryParam] = useState("");
 	const [hasSearched, setHasSearched] = useState(false);
 
 	const {
@@ -17,7 +17,9 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 		isPending: pfByUserIdQuPending,
 		data: pfByUserIdQuData,
 		refetch: pfByUserIdQuRefetch
-	} = usePendingFoodsByUserIdQuery(offset, hasSearched, userIdQueryParam ?? "");
+	} = usePendingFoodsByUserIdQuery(offset, userIdQueryParam, {
+		enabled: hasSearched
+	});
 
 	const isDataLoading = pfByUserIdQuPending && hasSearched;
 
@@ -55,7 +57,7 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 					name="user_id"
 					id="user_id"
 					placeholder="User ID"
-					value={userIdQueryParam ?? ""}
+					value={userIdQueryParam}
 					onChange={(e) => setUserIdQueryParam(e.target.value)}
 					className="px-3 py-2 text-center border border-smoke focus:ring-1 focus:ring-mist 
                            focus:outline-0"

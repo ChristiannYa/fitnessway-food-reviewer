@@ -1,5 +1,7 @@
 import { apiClientApp } from "@/api/apiClient";
+import type { ClientResponse } from "@/api/apiClient";
 import { PAGINATION_LIMIT } from "@/constants";
+import type { TokenGuardQueryOptions } from "@/hooks/useTokenGuardQuery";
 import { useTokenGuardQuery } from "@/hooks/useTokenGuardQuery";
 import type {
 	PendingFoodsByUserIdRes,
@@ -8,8 +10,8 @@ import type {
 
 export const usePendingFoodsByUserIdQuery = (
 	offset: number,
-	enabled: boolean,
-	userId: string
+	userId: string,
+	options?: TokenGuardQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
 ) =>
 	useTokenGuardQuery({
 		queryKey: [`pendingFoodsByUserId`, offset],
@@ -23,13 +25,13 @@ export const usePendingFoodsByUserIdQuery = (
 					userId: userId
 				}
 			}),
-		enabled: enabled
+		...options
 	});
 
 export const usePendingFoodsByuserTypeQuery = (
 	offset: number,
-	enabled: boolean,
-	userType: string
+	userType: string,
+	options?: TokenGuardQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
 ) =>
 	useTokenGuardQuery({
 		queryKey: ["pendingFoodsByUserType", offset],
@@ -43,5 +45,5 @@ export const usePendingFoodsByuserTypeQuery = (
 					userType: userType
 				}
 			}),
-		enabled: enabled
+		...options
 	});
