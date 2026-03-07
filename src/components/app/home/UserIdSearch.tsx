@@ -3,9 +3,9 @@ import { isStringNullOrEmpty } from "@/utils/textUtils";
 import { useState } from "react";
 import { Spinner } from "@/components/elements/Spinner";
 import { useAutoClear } from "@/hooks/useAutoClear";
-import { PAGINATION_LIMIT } from "@/constants";
 import { PendingFoodsSummaryGrid } from "@/components/foods/PendingFoodsSummaryGrid";
 import { AvailablePages } from "@/components/elements/AvailablePages";
+import { pagination } from "@/constants";
 
 export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 	const [offset, setOffset] = useState(0);
@@ -38,7 +38,7 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 	}
 
 	function handlePageChange(page: number) {
-		setOffset((page - 1) * PAGINATION_LIMIT);
+		setOffset((page - 1) * pagination.limit);
 	}
 
 	if (!isVisible) return null;

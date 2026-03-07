@@ -1,6 +1,6 @@
 import { apiClientApp } from "@/api/apiClient";
 import type { ClientResponse } from "@/api/apiClient";
-import { PAGINATION_LIMIT } from "@/constants";
+import { pagination, queryKeys } from "@/constants";
 import type { TokenGuardQueryOptions } from "@/hooks/useTokenGuardQuery";
 import { useTokenGuardQuery } from "@/hooks/useTokenGuardQuery";
 import type {
@@ -14,13 +14,13 @@ export const usePendingFoodsByUserIdQuery = (
 	options?: TokenGuardQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
 ) =>
 	useTokenGuardQuery({
-		queryKey: [`pendingFoodsByUserId`, offset],
+		queryKey: queryKeys.food.pending.byUserId(offset, userId),
 		queryFn: () =>
 			apiClientApp.req<PendingFoodsByUserIdRes>({
 				method: "GET",
 				path: "/food/pending/find-by/user-id",
 				params: {
-					limit: `${PAGINATION_LIMIT}`,
+					limit: `${pagination.limit}`,
 					offset: `${offset}`,
 					userId: userId
 				}
@@ -34,13 +34,13 @@ export const usePendingFoodsByuserTypeQuery = (
 	options?: TokenGuardQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
 ) =>
 	useTokenGuardQuery({
-		queryKey: ["pendingFoodsByUserType", offset],
+		queryKey: queryKeys.food.pending.byUserType(offset, userType),
 		queryFn: () =>
 			apiClientApp.req<PendingFoodsByUserTypeRes>({
 				method: "GET",
 				path: "/food/pending/find-by/user-type",
 				params: {
-					limit: `${PAGINATION_LIMIT}`,
+					limit: `${pagination.limit}`,
 					offset: `${offset}`,
 					userType: userType
 				}

@@ -48,7 +48,11 @@ export type PendingFoodsByUserTypeRes = {
 	pendingFoodsPagination: PaginationResult<PendingFood>;
 };
 
-export type ReviewPendingFoodRequest = {
+export type ReviewPendingFoodReq = {
 	pendingFoodId: number;
 	rejectionReason?: string;
+};
+
+export type ReviewPendingFoodRes = {
+	pendingFoodReviewed: PendingFood;
 };
