@@ -3,24 +3,29 @@ import type { LoginRes, LogoutReq, RefreshReq, RefreshRes } from "@/types/authTy
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie, deleteCookie } from "@tanstack/react-start/server";
 import { apiClientPub } from "@/api/apiClient";
+import type { ClientResponse } from "@/api/apiClient";
 import cookies from "@/config/cookies";
 
+/**
+ * The access token is intentionally **not** stored server-side, so the client is
+ * responsible for storing it in memory upon receiving the response.
+ */
 export const refreshAccessTokenServerFn = createServerFn({
 	method: "POST"
 }).handler(async () => {
 	const body: RefreshReq = { refreshToken: getCookie("refreshToken") ?? "" };
-	const res = await apiClientPub.req<RefreshRes>({
+
+	return await apiClientPub.req<RefreshRes>({
 		method: "POST",
 		path: "/auth/refresh",
 		body: body
 	});
-
-	if (!res.success) return null;
-
-	// Return the access token so that the client stores it in memory
-	return res.data.accessToken;
 });
 
+/**
+ * Only the refresh token is stored server-side in cookies.
+ * The client is responsible for storing the returned access token in memory.
+ */
 export const loginServerFn = createServerFn({ method: "POST" })
 	.inputValidator(LoginReqSchema)
 	.handler(async ({ data }) => {
@@ -30,38 +35,39 @@ export const loginServerFn = createServerFn({ method: "POST" })
 			body: data
 		});
 
-		if (!res.success) return res;
+		if (!res.success) {
+			return {
+				...res,
+				data: { accessToken: null }
+			};
+		}
 
-		// Store only the refresh token in cookies because this is the responsibility
-		// of a server function only
 		setCookie(cookies.refresh.name, res.data.refreshToken, cookies.refresh.options);
 
-		// Return the access token so that the client stores it in memory
 		return {
 			...res,
 			data: { accessToken: res.data.accessToken }
 		};
 	});
 
-export const logoutServerFn = createServerFn({ method: "POST" }).handler(async () => {
-	const body: LogoutReq = {
-		refreshToken: getCookie("refreshToken") ?? ""
-	};
-	const res = await apiClientPub.req<never>({
-		method: "POST",
-		path: "/auth/logout",
-		body: body
-	});
+/**
+ * Clears the refresh token cookie regardless of the API response.
+ * The client is responsible for removing the access token from memory.
+ */
+export const logoutServerFn = createServerFn({ method: "POST" }).handler(
+	async (): Promise<ClientResponse<never>> => {
+		const body: LogoutReq = {
+			refreshToken: getCookie("refreshToken") ?? ""
+		};
 
-	// Clear the cookie regardles of the response.
-	// Client should be responsible of deleting the access token
-	deleteCookie(cookies.refresh.name);
+		const res = await apiClientPub.req<never>({
+			method: "POST",
+			path: "/auth/logout",
+			body: body
+		});
 
-	if (!res.success) return res;
+		deleteCookie(cookies.refresh.name);
 
-	return {
-		success: true,
-		message: res.message,
-		data: null
-	};
-});
+		return res;
+	}
+);

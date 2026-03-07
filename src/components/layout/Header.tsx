@@ -25,13 +25,13 @@ export default function Header() {
 	const logoutMutation = useMutation({
 		mutationFn: logoutServerFn,
 		onSuccess: async (ctx) => {
-			if (!ctx.success) {
-				// Just log error to not block user in their account
-				console.log(`error when logging out: ${ctx.message}`);
-			}
-
 			// Clear access token regardless of server response
 			accessTokenStore.clearAccessToken();
+
+			if (!ctx.success) {
+				// Just log error to not block user in their account
+				console.log("error when logging out: ", ctx.message);
+			}
 
 			router.navigate({ to: "/login" });
 		},

@@ -12,11 +12,11 @@ export function Login() {
 		mutationFn: loginServerFn,
 		onSuccess: async (ctx) => {
 			if (!ctx.success) {
-				console.log(ctx.message);
+				console.log("error logging in: ", ctx.message);
 				return;
 			}
 
-			// Store only the access token because this is the responsibility of
+			// Store just the access token because this is the responsibility of
 			// the client
 			accessTokenStore.setAccessToken(ctx.data.accessToken);
 
@@ -83,8 +83,7 @@ export function Login() {
 						Error logging in
 					</p>
 				)}
-				{loginMutation.data?.message.toLowerCase() ===
-					"invalid email or password" && (
+				{loginMutation.data?.status === 401 && (
 					<p className="text-mist text-center text-sm mt-2">
 						Invalid email or password
 					</p>

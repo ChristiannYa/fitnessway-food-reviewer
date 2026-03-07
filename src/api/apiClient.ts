@@ -5,6 +5,7 @@ import type { AccessTokenStore } from "@/store/accessTokenStore";
 import { accessTokenStore as accessTokenStoreInstance } from "@/store/accessTokenStore";
 import { refreshAccessTokenServerFn } from "@/server/authServerFns";
 import { toCamelCase, toSnakeCase } from "@/utils/textCases";
+import type { RefreshRes } from "@/types/authTypes";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -18,20 +19,24 @@ type HttpRequest<T> = {
 
 type HttpRequestData<T> = Omit<HttpRequest<T>, "isRetry">;
 
-type ApiResponse<T> =
+type ServerResponse<T> =
 	| { success: true; message: string; data: T }
 	| { success: false; message: string; data: null };
+
+export type ClientResponse<T> =
+	| { success: true; message: null; status: null; data: T }
+	| { success: false; message: string; status: number; data: null };
 
 class ApiClient {
 	constructor(
 		private baseUrl: string,
 		private accessTokenStore?: AccessTokenStore,
-		private refreshHandler?: () => Promise<string | null>
+		private refreshHandler?: () => Promise<ClientResponse<RefreshRes>>
 	) {}
 
 	private async makeRequest<R, T = unknown>(
 		req: HttpRequest<T>
-	): Promise<ApiResponse<R>> {
+	): Promise<ServerResponse<R>> {
 		const url = new URL(`${this.baseUrl}${req.path}`);
 
 		const headers = new Headers();
@@ -60,11 +65,11 @@ class ApiClient {
 		});
 
 		if (!res.ok) {
-			const error = (await res.json()) as ApiResponse<never>;
+			const error = (await res.json()) as ServerResponse<never>;
 			throw new RequestBaseError(error.message, res.status);
 		}
 
-		return toCamelCase(await res.json()) as ApiResponse<R>;
+		return toCamelCase(await res.json()) as ServerResponse<R>;
 	}
 
 	private async handleRequest<R, T = unknown>({
@@ -73,27 +78,31 @@ class ApiClient {
 		body,
 		params,
 		isRetry = false
-	}: HttpRequest<T>): Promise<ApiResponse<R>> {
-		const [res, error] = await catchingErrorT(
+	}: HttpRequest<T>): Promise<ClientResponse<R>> {
+		const [requestRes, requestError] = await catchingErrorT(
 			this.makeRequest<R, T>({ method, path, body, params }),
 			[RequestBaseError]
 		);
 
-		if (error) {
-			if (error.status === 401 && !isRetry) {
+		if (requestError) {
+			if (requestError.status === 401 && !isRetry) {
+				// Guard that returns early because the api client is a public instance
 				if (!this.refreshHandler || !this.accessTokenStore) {
-					return this.error(error.message);
+					return this.error(requestError.message, requestError.status);
 				}
 
 				// The refresh handler lives outside ApiClient because reading httpOnly cookies
 				// requires a server function — something ApiClient cannot do directly
-				const newAccessToken = await this.refreshHandler();
+				const refreshRes = await this.refreshHandler();
 
-				// Store only the access token
-				if (newAccessToken) {
-					this.accessTokenStore.setAccessToken(newAccessToken);
+				if (!refreshRes.success) {
+					console.log("error refreshing access token: ", refreshRes.message);
+					return this.error(refreshRes.message, refreshRes.status);
 				}
 
+				this.accessTokenStore.setAccessToken(refreshRes.data.accessToken);
+
+				// Retry same request with refreshed access token
 				return this.handleRequest<R>({
 					method,
 					path,
@@ -103,21 +112,23 @@ class ApiClient {
 				});
 			}
 
-			return this.error(error.message);
+			return this.error(requestError.message, requestError.status);
 		}
 
-		return this.success(res);
+		return this.success(requestRes.data as R);
 	}
 
-	private success = <T>(res: ApiResponse<T>): ApiResponse<T> => ({
+	private success = <T>(data: T): ClientResponse<T> => ({
 		success: true as const,
-		message: res.message,
-		data: res.data as T
+		message: null,
+		status: null,
+		data: data
 	});
 
-	private error = (errorMessage: string): ApiResponse<never> => ({
+	private error = (message: string, status: number): ClientResponse<never> => ({
 		success: false as const,
-		message: errorMessage,
+		message: message,
+		status: status,
 		data: null
 	});
 

@@ -37,8 +37,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 	}),
 	beforeLoad: async () => {
 		if (!accessTokenStore.getAccessToken()) {
-			const newAccessToken = await refreshAccessTokenServerFn();
-			if (newAccessToken) accessTokenStore.setAccessToken(newAccessToken);
+			const res = await refreshAccessTokenServerFn();
+			if (res.data) accessTokenStore.setAccessToken(res.data.accessToken);
 		}
 
 		return {
