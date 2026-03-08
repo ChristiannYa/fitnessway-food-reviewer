@@ -1,19 +1,19 @@
 import { apiClientApp } from "@/api/apiClient";
 import type { ClientResponse } from "@/api/apiClient";
 import { pagination, queryKeys } from "@/constants";
-import type { TokenGuardQueryOptions } from "@/hooks/useTokenGuardQuery";
-import { useTokenGuardQuery } from "@/hooks/useTokenGuardQuery";
+import type { ClientQueryOptions } from "@/types/appTypes";
 import type {
 	PendingFoodsByUserIdRes,
 	PendingFoodsByUserTypeRes
 } from "@/types/foodTypes";
+import { useQuery } from "@tanstack/react-query";
 
 export const usePendingFoodsByUserIdQuery = (
 	offset: number,
 	userId: string,
-	options?: TokenGuardQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
+	options?: ClientQueryOptions<ClientResponse<PendingFoodsByUserTypeRes>>
 ) =>
-	useTokenGuardQuery({
+	useQuery({
 		queryKey: queryKeys.food.pending.byUserId(offset, userId),
 		queryFn: () =>
 			apiClientApp.req<PendingFoodsByUserIdRes>({
@@ -31,9 +31,9 @@ export const usePendingFoodsByUserIdQuery = (
 export const usePendingFoodsByuserTypeQuery = (
 	offset: number,
 	userType: string,
-	options?: TokenGuardQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
+	options?: ClientQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
 ) =>
-	useTokenGuardQuery({
+	useQuery({
 		queryKey: queryKeys.food.pending.byUserType(offset, userType),
 		queryFn: () =>
 			apiClientApp.req<PendingFoodsByUserTypeRes>({

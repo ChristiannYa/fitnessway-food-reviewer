@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { SearchOption } from "@/components/app/home/SearchOption";
 import { UserIdSearch } from "@/components/app/home/UserIdSearch";
-
-const SEARCH_OPTIONS = ["User Type", "User ID"] as const;
-
-type SearchOptions = (typeof SEARCH_OPTIONS)[number];
+import { SEARCH_OPTIONS } from "@/types/userTypes";
+import type { SearchOptions } from "@/types/userTypes"
 
 export function Home() {
 	const [searchOption, setSearchOption] = useState<SearchOptions | null>(null);

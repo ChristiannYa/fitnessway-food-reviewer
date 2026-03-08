@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAccessTokenStore } from "@/store/accessTokenStore";
 
 let context:
 	| {
@@ -8,13 +9,16 @@ let context:
 	| undefined;
 
 export function getContext() {
-	if (context) {
-		return context;
-	}
+	if (context) return context;
 
 	const queryClient = new QueryClient({
 		defaultOptions: {
 			queries: {
+				enabled: (query) => {
+					const isPublic = query.meta?.public === true;
+					const accessToken = useAccessTokenStore.getState().accessToken;
+					return isPublic || !!accessToken;
+				},
 				staleTime: Infinity,
 				gcTime: Infinity
 			}

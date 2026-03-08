@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Home, Menu, ArrowLeftIcon } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { logoutServerFn } from "@/server/authServerFns";
-import { accessTokenStore } from "@/store/accessTokenStore";
 import { useUserQuery } from "@/hooks/queries/userQueries";
 import { Spinner } from "@/components/elements/Spinner";
+import { useAccessTokenStore } from "@/store/accessTokenStore";
 
 const navConfig = {
 	items: [{ to: "/home", label: "Home", icon: Home }],
@@ -26,7 +26,7 @@ export default function Header() {
 		mutationFn: logoutServerFn,
 		onSuccess: async (ctx) => {
 			// Clear access token regardless of server response
-			accessTokenStore.clearAccessToken();
+			useAccessTokenStore.getState().remove();
 
 			if (!ctx.success) {
 				// Just log error to not block user in their account

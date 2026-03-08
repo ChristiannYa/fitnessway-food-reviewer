@@ -1,9 +1,9 @@
 import { loginServerFn } from "@/server/authServerFns";
 import type { LoginReq } from "@/schemas/authSchema";
-import { accessTokenStore } from "@/store/accessTokenStore";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import React from "react";
+import { useAccessTokenStore } from "@/store/accessTokenStore";
 
 export function Login() {
 	const router = useRouter();
@@ -18,7 +18,7 @@ export function Login() {
 
 			// Store just the access token because this is the responsibility of
 			// the client
-			accessTokenStore.setAccessToken(ctx.data.accessToken);
+			useAccessTokenStore.getState().save(ctx.data.accessToken);
 
 			await router.invalidate();
 			router.navigate({ to: "/" });

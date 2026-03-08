@@ -1,11 +1,10 @@
 import { envValues } from "@/config/env";
 import { catchingErrorT } from "@/errors/errorCatching";
 import { RequestBaseError } from "@/errors/requestErrors";
-import type { AccessTokenStore } from "@/store/accessTokenStore";
-import { accessTokenStore as accessTokenStoreInstance } from "@/store/accessTokenStore";
 import { refreshAccessTokenServerFn } from "@/server/authServerFns";
 import { toCamelCase, toSnakeCase } from "@/utils/textCases";
 import type { RefreshRes } from "@/types/authTypes";
+import { useAccessTokenStore } from "@/store/accessTokenStore";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -30,7 +29,6 @@ export type ClientResponse<T> =
 class ApiClient {
 	constructor(
 		private baseUrl: string,
-		private accessTokenStore?: AccessTokenStore,
 		private refreshHandler?: () => Promise<ClientResponse<RefreshRes>>
 	) {}
 
@@ -42,11 +40,10 @@ class ApiClient {
 		const headers = new Headers();
 		headers.set("Content-Type", "application/json");
 
-		if (this.accessTokenStore) {
-			headers.set(
-				"Authorization",
-				`Bearer ${this.accessTokenStore.getAccessToken()}`
-			);
+		const accessToken = useAccessTokenStore.getState().accessToken;
+
+		if (accessToken) {
+			headers.set("Authorization", `Bearer ${accessToken}`);
 		}
 
 		if (req.params) {
@@ -87,7 +84,7 @@ class ApiClient {
 		if (requestError) {
 			if (requestError.status === 401 && !isRetry) {
 				// Guard that returns early because the api client is a public instance
-				if (!this.refreshHandler || !this.accessTokenStore) {
+				if (!this.refreshHandler) {
 					return this.error(requestError.message, requestError.status);
 				}
 
@@ -100,7 +97,7 @@ class ApiClient {
 					return this.error(refreshRes.message, refreshRes.status);
 				}
 
-				this.accessTokenStore.setAccessToken(refreshRes.data.accessToken);
+				useAccessTokenStore.getState().save(refreshRes.data.accessToken);
 
 				// Retry same request with refreshed access token
 				return this.handleRequest<R>({
@@ -145,6 +142,5 @@ export const apiClientPub = new ApiClient(envValues.apiBaseUrl);
 
 export const apiClientApp = new ApiClient(
 	envValues.apiBaseUrl,
-	accessTokenStoreInstance,
 	refreshAccessTokenServerFn
 );

@@ -6,9 +6,9 @@ import TanStackQueryProvider from "../integrations/tanstack-query/root-provider"
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 import type { QueryClient } from "@tanstack/react-query";
-import { accessTokenStore } from "@/store/accessTokenStore";
 import { refreshAccessTokenServerFn } from "@/server/authServerFns";
 import { useEffect } from "react";
+import { useAccessTokenStore } from "@/store/accessTokenStore";
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -36,13 +36,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 		]
 	}),
 	beforeLoad: async () => {
-		if (!accessTokenStore.getAccessToken()) {
+		const accessTokenStore = useAccessTokenStore.getState();
+
+		if (!accessTokenStore.accessToken) {
 			const res = await refreshAccessTokenServerFn();
-			if (res.data) accessTokenStore.setAccessToken(res.data.accessToken);
+			if (res.data) accessTokenStore.save(res.data.accessToken);
 		}
 
 		return {
-			accessTokenSsr: accessTokenStore.getAccessToken()
+			accessTokenSsr: useAccessTokenStore.getState().accessToken
 		};
 	},
 	notFoundComponent: () => <p>404 - Page not found</p>,
@@ -52,17 +54,25 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 function RootDocument({ children }: { children: React.ReactNode }) {
 	const { accessTokenSsr } = Route.useRouteContext();
 
+	// Single subscription causes `RootDocument` to re-render when token changes,
+	// which propagates fown and causes all queries to re-evaulate `enabled`
+	useAccessTokenStore((s) => s.accessToken);
+
 	// The root route's `beforeLoad()` runs on the server, so the acess token that is
 	// refreshed is stored in the server's `AccessTokenStore` instance, not the browser's.
 	//
 	// Here we bridge that gap by seeding the browser's store with the token passed down
 	// through the router context, which TanStack Start serializes into the HTML.
 	//
-	// This runs once on hydration, making the token available to all queries
-	// wrapped in useTokenGuardQuery().
+	// This runs once on hydration.
+	// Because the store is reactive (Zustand), setting the token here triggers a re-render,
+	// which causes `QueryClient`'s `enabled` check to re-evaulate and allows authenticated
+	// queries to fire
 	useEffect(() => {
-		if (accessTokenSsr && !accessTokenStore.getAccessToken()) {
-			accessTokenStore.setAccessToken(accessTokenSsr);
+		const accessToken = useAccessTokenStore.getState().accessToken;
+
+		if (accessTokenSsr && !accessToken) {
+			useAccessTokenStore.getState().save(accessTokenSsr);
 		}
 	}, [accessTokenSsr]);
 

@@ -1,10 +1,10 @@
 import type { UserRes } from "@/types/userTypes";
 import { apiClientApp } from "@/api/apiClient";
-import { useTokenGuardQuery } from "@/hooks/useTokenGuardQuery";
 import { queryKeys } from "@/constants";
+import { useQuery } from "@tanstack/react-query";
 
 export const useUserQuery = () =>
-	useTokenGuardQuery({
+	useQuery({
 		queryKey: queryKeys.user.me(),
 		queryFn: () =>
 			apiClientApp.req<UserRes>({

@@ -1,30 +1,18 @@
-export class AccessTokenStore {
-	readonly #isDev = import.meta.env.DEV;
-	#accessToken: string | null = null;
+import { create } from "zustand";
 
-	constructor() {
-		if (this.#isDev) {
-			this.#accessToken = sessionStorage.getItem("dev_access_token");
-		}
-	}
+type AccessTokenState = {
+	accessToken: string | null;
+};
 
-	getAccessToken = () => this.#accessToken;
+type AccessTokenActions = {
+	save: (token: string) => void;
+	remove: () => void;
+};
 
-	setAccessToken = (token: string) => {
-		this.#accessToken = token;
-
-		if (this.#isDev) {
-			sessionStorage.setItem("dev_access_token", token);
-		}
-	};
-
-	clearAccessToken = () => {
-		this.#accessToken = null;
-
-		if (this.#isDev) {
-			sessionStorage.removeItem("dev_access_token");
-		}
-	};
-}
-
-export const accessTokenStore = new AccessTokenStore();
+export const useAccessTokenStore = create<AccessTokenState & AccessTokenActions>(
+	(set) => ({
+		accessToken: null,
+		save: (token) => set({ accessToken: token }),
+		remove: () => set({ accessToken: null })
+	})
+);
