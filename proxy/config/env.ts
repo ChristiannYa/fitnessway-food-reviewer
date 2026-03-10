@@ -1,10 +1,9 @@
 function getEnvValue(key: string): string {
-	const value = import.meta.env[key];
+	const value = process.env[key];
 	if (!value) throw new Error(`${key} not found in .env file`);
 	return value;
 }
 
 export const envValues = {
-	apiBaseUrl: getEnvValue("VITE_API_BASE_URL"),
-	pxyBaseUrl: getEnvValue("VITE_PROXY_BASE_URL")
+	proxyPort: getEnvValue("PROXY_PORT")
 };

@@ -1,7 +1,6 @@
 import { apiClientApp } from "@/api/apiClient";
-import type { ClientResponse } from "@/api/apiClient";
 import { pagination, queryKeys } from "@/constants";
-import type { ClientQueryOptions } from "@/types/appTypes";
+import type { ClientQueryOptions, ClientResponse } from "@/types/appTypes";
 import type {
 	PendingFoodsByUserIdRes,
 	PendingFoodsByUserTypeRes

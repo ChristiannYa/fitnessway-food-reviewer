@@ -1,8 +1,8 @@
-import type { CookieSerializeOptions } from "cookie-es";
+import type { CookieOptions } from "hono/utils/cookie";
 
 type cookieConfig = {
 	name: string;
-	options: CookieSerializeOptions;
+	options: CookieOptions;
 };
 
 const cookies = {

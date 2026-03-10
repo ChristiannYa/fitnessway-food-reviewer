@@ -1,10 +1,10 @@
 import type { UserRes } from "@/types/userTypes";
 import { apiClientApp } from "@/api/apiClient";
 import { queryKeys } from "@/constants";
-import { useQuery } from "@tanstack/react-query";
+import { useAuthQuery } from "../useAuthQuery";
 
 export const useUserQuery = () =>
-	useQuery({
+	useAuthQuery({
 		queryKey: queryKeys.user.me(),
 		queryFn: () =>
 			apiClientApp.req<UserRes>({

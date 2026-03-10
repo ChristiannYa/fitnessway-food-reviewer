@@ -1,10 +1,12 @@
 import { envValues } from "@/config/env";
 import { catchingErrorT } from "@/errors/errorCatching";
-import { RequestBaseError } from "@/errors/requestErrors";
-import { refreshAccessTokenServerFn } from "@/server/authServerFns";
-import { toCamelCase, toSnakeCase } from "@/utils/textCases";
+import { ApiRequestBaseError } from "@/errors/requestErrors";
+import { refreshAccessToken } from "@/auth/authHandlers";
 import type { RefreshRes } from "@/types/authTypes";
 import { useAccessTokenStore } from "@/store/accessTokenStore";
+import type { ClientResponse } from "@/types/appTypes";
+import { clientError, clientSuccess } from "@/utils/clientUtils";
+import { toSnakeCase, toCamelCase } from "@/utils/textUtils";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -18,13 +20,9 @@ type HttpRequest<T> = {
 
 type HttpRequestData<T> = Omit<HttpRequest<T>, "isRetry">;
 
-type ServerResponse<T> =
+type ApiResponse<T> =
 	| { success: true; message: string; data: T }
 	| { success: false; message: string; data: null };
-
-export type ClientResponse<T> =
-	| { success: true; message: null; status: null; data: T }
-	| { success: false; message: string; status: number; data: null };
 
 class ApiClient {
 	constructor(
@@ -34,7 +32,7 @@ class ApiClient {
 
 	private async makeRequest<R, T = unknown>(
 		req: HttpRequest<T>
-	): Promise<ServerResponse<R>> {
+	): Promise<ApiResponse<R>> {
 		const url = new URL(`${this.baseUrl}${req.path}`);
 
 		const headers = new Headers();
@@ -62,11 +60,11 @@ class ApiClient {
 		});
 
 		if (!res.ok) {
-			const error = (await res.json()) as ServerResponse<never>;
-			throw new RequestBaseError(error.message, res.status);
+			const error = (await res.json()) as ApiResponse<never>;
+			throw new ApiRequestBaseError(error.message, res.status);
 		}
 
-		return toCamelCase(await res.json()) as ServerResponse<R>;
+		return toCamelCase(await res.json()) as ApiResponse<R>;
 	}
 
 	private async handleRequest<R, T = unknown>({
@@ -78,14 +76,14 @@ class ApiClient {
 	}: HttpRequest<T>): Promise<ClientResponse<R>> {
 		const [requestRes, requestError] = await catchingErrorT(
 			this.makeRequest<R, T>({ method, path, body, params }),
-			[RequestBaseError]
+			[ApiRequestBaseError]
 		);
 
-		if (requestError) {
+		if (requestError !== null) {
 			if (requestError.status === 401 && !isRetry) {
 				// Guard that returns early because the api client is a public instance
 				if (!this.refreshHandler) {
-					return this.error(requestError.message, requestError.status);
+					return clientError(requestError.message, requestError.status);
 				}
 
 				// The refresh handler lives outside ApiClient because reading httpOnly cookies
@@ -94,7 +92,7 @@ class ApiClient {
 
 				if (!refreshRes.success) {
 					console.log("error refreshing access token: ", refreshRes.message);
-					return this.error(refreshRes.message, refreshRes.status);
+					return clientError(refreshRes.message, refreshRes.status);
 				}
 
 				useAccessTokenStore.getState().save(refreshRes.data.accessToken);
@@ -109,25 +107,11 @@ class ApiClient {
 				});
 			}
 
-			return this.error(requestError.message, requestError.status);
+			return clientError(requestError.message, requestError.status);
 		}
 
-		return this.success(requestRes.data as R);
+		return clientSuccess(requestRes.data as R);
 	}
-
-	private success = <T>(data: T): ClientResponse<T> => ({
-		success: true as const,
-		message: null,
-		status: null,
-		data: data
-	});
-
-	private error = (message: string, status: number): ClientResponse<never> => ({
-		success: false as const,
-		message: message,
-		status: status,
-		data: null
-	});
 
 	public req = async <R, T = unknown>(req: HttpRequestData<T>) =>
 		this.handleRequest<R>({
@@ -138,9 +122,8 @@ class ApiClient {
 		});
 }
 
+export const apiClientPxy = new ApiClient(envValues.pxyBaseUrl);
+
 export const apiClientPub = new ApiClient(envValues.apiBaseUrl);
 
-export const apiClientApp = new ApiClient(
-	envValues.apiBaseUrl,
-	refreshAccessTokenServerFn
-);
+export const apiClientApp = new ApiClient(envValues.apiBaseUrl, refreshAccessToken);

@@ -2,7 +2,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { Home, Menu, ArrowLeftIcon } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { logoutServerFn } from "@/server/authServerFns";
+import { logout } from "@/auth/authHandlers";
 import { useUserQuery } from "@/hooks/queries/userQueries";
 import { Spinner } from "@/components/elements/Spinner";
 import { useAccessTokenStore } from "@/store/accessTokenStore";
@@ -23,7 +23,7 @@ export default function Header() {
 	const toggleMenu = () => setIsOpen((prev) => !prev);
 
 	const logoutMutation = useMutation({
-		mutationFn: logoutServerFn,
+		mutationFn: logout,
 		onSuccess: async (ctx) => {
 			// Clear access token regardless of server response
 			useAccessTokenStore.getState().remove();

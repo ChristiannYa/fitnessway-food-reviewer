@@ -1,4 +1,4 @@
-import { loginServerFn } from "@/server/authServerFns";
+import { login } from "@/auth/authHandlers";
 import type { LoginReq } from "@/schemas/authSchema";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
@@ -9,7 +9,7 @@ export function Login() {
 	const router = useRouter();
 
 	const loginMutation = useMutation({
-		mutationFn: loginServerFn,
+		mutationFn: login,
 		onSuccess: async (ctx) => {
 			if (!ctx.success) {
 				console.log("error logging in: ", ctx.message);
@@ -24,7 +24,7 @@ export function Login() {
 			router.navigate({ to: "/" });
 		},
 		onError: (error) => {
-			console.log(error.message);
+			console.log("error logging in: ", error.message);
 		}
 	});
 
@@ -39,7 +39,7 @@ export function Login() {
 			deviceName: "HP Envy x360 (Web)"
 		};
 
-		loginMutation.mutate({ data: loginData });
+		loginMutation.mutate({ loginData: loginData });
 	};
 
 	return (
