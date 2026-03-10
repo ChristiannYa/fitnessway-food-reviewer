@@ -1,4 +1,4 @@
-import { pxyReq } from "./requestPxy";
+import { pxyReq } from "@/proxy/requestPxy";
 
 export const getRefreshTokenPxy = () =>
 	pxyReq<{ refreshToken: string }>("/pxy/token", { method: "GET" });

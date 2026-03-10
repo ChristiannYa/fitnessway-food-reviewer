@@ -4,9 +4,10 @@ import { ApiRequestBaseError } from "@/errors/requestErrors";
 import { refreshAccessToken } from "@/auth/authHandlers";
 import type { RefreshRes } from "@/types/authTypes";
 import { useAccessTokenStore } from "@/store/accessTokenStore";
-import type { ClientResponse } from "@/types/appTypes";
+import type { ClientResponse } from "@/utils/clientUtils";
 import { clientError, clientSuccess } from "@/utils/clientUtils";
 import { toSnakeCase, toCamelCase } from "@/utils/textUtils";
+import type { KtServerResponse } from "types/serverTypes";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -20,10 +21,6 @@ type HttpRequest<T> = {
 
 type HttpRequestData<T> = Omit<HttpRequest<T>, "isRetry">;
 
-type ApiResponse<T> =
-	| { success: true; message: string; data: T }
-	| { success: false; message: string; data: null };
-
 class ApiClient {
 	constructor(
 		private baseUrl: string,
@@ -32,7 +29,7 @@ class ApiClient {
 
 	private async makeRequest<R, T = unknown>(
 		req: HttpRequest<T>
-	): Promise<ApiResponse<R>> {
+	): Promise<KtServerResponse<R>> {
 		const url = new URL(`${this.baseUrl}${req.path}`);
 
 		const headers = new Headers();
@@ -60,11 +57,11 @@ class ApiClient {
 		});
 
 		if (!res.ok) {
-			const error = (await res.json()) as ApiResponse<never>;
+			const error = (await res.json()) as KtServerResponse<never>;
 			throw new ApiRequestBaseError(error.message, res.status);
 		}
 
-		return toCamelCase(await res.json()) as ApiResponse<R>;
+		return toCamelCase(await res.json()) as KtServerResponse<R>;
 	}
 
 	private async handleRequest<R, T = unknown>({
@@ -87,7 +84,8 @@ class ApiClient {
 				}
 
 				// The refresh handler lives outside ApiClient because reading httpOnly cookies
-				// requires a server function — something ApiClient cannot do directly
+				// requires function that talks to a server — something ApiClient can/should not
+				// do directly
 				const refreshRes = await this.refreshHandler();
 
 				if (!refreshRes.success) {

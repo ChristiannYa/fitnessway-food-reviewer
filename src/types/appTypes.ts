@@ -1,10 +1,6 @@
 import type { UseQueryOptions } from "@tanstack/react-query";
 
-export type ClientResponse<T> =
-	| { success: true; message: null; status: null; data: T }
-	| { success: false; message: string; status: number; data: null };
-
-export type ClientQueryOptions<T> = Omit<
+export type AppQueryOptions<T> = Omit<
 	UseQueryOptions<T>,
 	"queryKey" | "queryFn" | "enabled"
 > & {

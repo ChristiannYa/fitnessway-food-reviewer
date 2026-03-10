@@ -1,16 +1,17 @@
 import { apiClientApp } from "@/api/apiClient";
 import { pagination, queryKeys } from "@/constants";
-import type { ClientQueryOptions, ClientResponse } from "@/types/appTypes";
+import type { AppQueryOptions } from "@/types/appTypes";
 import type {
 	PendingFoodsByUserIdRes,
 	PendingFoodsByUserTypeRes
 } from "@/types/foodTypes";
+import type { ClientResponse } from "@/utils/clientUtils";
 import { useQuery } from "@tanstack/react-query";
 
 export const usePendingFoodsByUserIdQuery = (
 	offset: number,
 	userId: string,
-	options?: ClientQueryOptions<ClientResponse<PendingFoodsByUserTypeRes>>
+	options?: AppQueryOptions<ClientResponse<PendingFoodsByUserTypeRes>>
 ) =>
 	useQuery({
 		queryKey: queryKeys.food.pending.byUserId(offset, userId),
@@ -30,7 +31,7 @@ export const usePendingFoodsByUserIdQuery = (
 export const usePendingFoodsByuserTypeQuery = (
 	offset: number,
 	userType: string,
-	options?: ClientQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
+	options?: AppQueryOptions<ClientResponse<PendingFoodsByUserIdRes>>
 ) =>
 	useQuery({
 		queryKey: queryKeys.food.pending.byUserType(offset, userType),

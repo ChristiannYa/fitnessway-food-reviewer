@@ -5,5 +5,6 @@ function getEnvValue(key: string): string {
 }
 
 export const envValues = {
-	proxyPort: getEnvValue("PROXY_PORT")
+	proxyPort: getEnvValue("PROXY_PORT"),
+	appUrl: getEnvValue("VITE_APP_URL")
 };

@@ -3,12 +3,15 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import cookies from "./config/cookies";
 import { serve } from "@hono/node-server";
 import { envValues } from "./config/env";
+import { appCors } from "./config/cors";
 
 const app = new Hono();
 
+app.use(appCors());
+
 app.get("/pxy/token", (c) => {
 	const refreshToken = getCookie(c, cookies.refresh.name) ?? "";
-	return c.json({ success: true, data: refreshToken });
+	return c.json({ success: true, data: { refreshToken: refreshToken } });
 });
 
 app.post("/pxy/token", async (c) => {
@@ -24,6 +27,4 @@ app.delete("/pxy/token", (c) => {
 
 const port = parseInt(envValues.proxyPort);
 
-serve({ fetch: app.fetch, port }, () => {
-	console.log(`Proxy running on http://localhost:${port}`);
-});
+serve({ fetch: app.fetch, port });

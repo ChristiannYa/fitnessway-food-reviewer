@@ -5,27 +5,25 @@ import {
 	deleteRefreshTokenPxy,
 	getRefreshTokenPxy,
 	setRefreshTokenPxy
-} from "../proxy/refreshTokenPxy";
+} from "@/proxy/refreshTokenPxy";
 
 /**
  * The access token is intentionally **not** stored server-side, so the client is
  * responsible for storing it in memory upon receiving the response.
  */
-export async function refreshAccessToken() {
-	const refreshTokenPxyRes = await getRefreshTokenPxy();
-	const refreshToken = refreshTokenPxyRes.data?.refreshToken ?? "";
+export async function refreshAccessToken(refreshTokenString?: string) {
+	const refreshToken =
+		refreshTokenString ?? (await getRefreshTokenPxy()).data?.refreshToken ?? "";
 
 	return await apiClientPub.req<RefreshRes>({
 		method: "POST",
 		path: "/auth/refresh",
-		body: {
-			refreshToken: refreshToken
-		} as RefreshReq
+		body: { refreshToken: refreshToken } as RefreshReq
 	});
 }
 
 /**
- * Only the refresh token is stored server-side in cookies.
+ * Only the refresh token is stored from the server in cookies.
  * The client is responsible for storing the returned access token in memory.
  */
 export async function login({ loginData }: { loginData: LoginReq }) {
@@ -38,7 +36,7 @@ export async function login({ loginData }: { loginData: LoginReq }) {
 	if (!res.success) {
 		return {
 			...res,
-			data: { accessToken: "" }
+			data: { accessToken: null }
 		};
 	}
 
@@ -55,8 +53,8 @@ export async function login({ loginData }: { loginData: LoginReq }) {
  * The client is responsible for removing the access token from memory.
  */
 export async function logout() {
-	const refreshTokenPxyRes = await getRefreshTokenPxy();
-	const refreshToken = refreshTokenPxyRes.data?.refreshToken ?? "";
+	const refreshTokenPxyGetRes = await getRefreshTokenPxy();
+	const refreshToken = refreshTokenPxyGetRes.data?.refreshToken ?? "";
 
 	const body: LogoutReq = { refreshToken };
 

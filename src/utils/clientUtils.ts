@@ -1,4 +1,6 @@
-import type { ClientResponse } from "@/types/appTypes";
+export type ClientResponse<T> =
+	| { success: true; message: null; status: null; data: T }
+	| { success: false; message: string; status: number; data: null };
 
 export const clientSuccess = <T>(data: T): ClientResponse<T> => ({
 	success: true as const,
