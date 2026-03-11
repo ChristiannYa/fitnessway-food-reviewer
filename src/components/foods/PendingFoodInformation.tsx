@@ -11,11 +11,18 @@ import { MoreHorizontal, Check, X } from "lucide-react";
 import { ActionButton } from "@/components/elements/ActionButton";
 import type { NutrientInFood } from "@/types/nutrientTypes";
 
-export const PendingFoodInformation = ({ pendingFood }: { pendingFood: PendingFood }) => {
+export const PendingFoodInformation = ({
+	pendingFood,
+	onAccept,
+	onReject
+}: {
+	pendingFood: PendingFood;
+	onAccept: (foodId: number) => void;
+	onReject: (foodId: number, reason: string) => void;
+}) => {
 	const [isRejectionReasonVisible, setIsRejectionReasonVisible] =
 		useState<boolean>(false);
 	const [isRejecting, setIsRejecting] = useState<boolean>(false);
-	const [rejectionReason, setRejectionReason] = useState<string>("");
 
 	return (
 		<div className="flex flex-col w-90 bg-smoke/40 rounded-xl relative overflow-hidden">
@@ -35,7 +42,7 @@ export const PendingFoodInformation = ({ pendingFood }: { pendingFood: PendingFo
 						label="Accept"
 						icon={Check}
 						bgColor="bg-dry-green"
-						onButtonClick={() => {}}
+						onButtonClick={() => onAccept(pendingFood.id)}
 					/>
 					<ActionButton
 						label="Reject"
@@ -56,7 +63,9 @@ export const PendingFoodInformation = ({ pendingFood }: { pendingFood: PendingFo
 			{isRejecting && (
 				<RejectionWriting
 					onCancelRejection={() => setIsRejecting(false)}
-					onReject={() => {}}
+					onReject={(reason) => {
+						onReject(pendingFood.id, reason);
+					}}
 				/>
 			)}
 		</div>
@@ -161,16 +170,10 @@ const RejectionWriting = ({
 	onReject
 }: {
 	onCancelRejection: () => void;
-	onReject: () => void;
+	onReject: (reason: string) => void;
 }) => {
 	const [hasClickedRejected, setHasClickedRejected] = useState<boolean>(false);
-	const [rejectionConfirmed, setRejectionConfitmed] = useState<boolean>(false);
 	const [rejectionReason, setRejectionreason] = useState<string>("");
-
-	function handleRejection() {
-		if (!rejectionConfirmed) return;
-		onReject();
-	}
 
 	return (
 		<div className="flex flex-col p-3 w-full h-full absolute bg-black/50 backdrop-blur-lg">
@@ -197,7 +200,7 @@ const RejectionWriting = ({
 							<ActionButton
 								label="Yes"
 								bgColor="bg-rose-600"
-								onButtonClick={handleRejection}
+								onButtonClick={() => onReject(rejectionReason)}
 							/>
 						</div>
 					</div>

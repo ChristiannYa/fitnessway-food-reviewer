@@ -1,37 +1,43 @@
 import { apiClientApp } from "@/api/apiClient";
-import { mutationKeys, queryKeys } from "@/constants";
+import { mutationKeys } from "@/constants";
 import type { ReviewPendingFoodReq, ReviewPendingFoodRes } from "@/types/foodTypes";
 import type { SearchOptions, UserType } from "@/types/userTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { PendingFoodQueries } from "../queries/foodQueries";
 
-type ReviewMutation = { offset: number; req: ReviewPendingFoodReq } & (
+type ReviewMutationState = { offset: number } & (
 	| { searchType: Extract<SearchOptions, "User ID">; userId: string }
 	| { searchType: Extract<SearchOptions, "User Type">; userType: UserType }
 );
 
-export const useReviewMutation = () => {
-    const queryClient = useQueryClient()
+export const useReviewMutation = (state: ReviewMutationState) => {
+	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ req }: ReviewMutation) =>
+		mutationFn: (req: ReviewPendingFoodReq) =>
 			apiClientApp.req<ReviewPendingFoodRes>({
 				method: "POST",
 				path: "/food/pending/review",
 				body: req
 			}),
-		onMutate: async (ctx) => {
-			switch (ctx.searchType) {
+		onMutate: async () => {
+			switch (state.searchType) {
 				case "User Type": {
 					const snapshot = queryClient.getQueryData(
-						queryKeys.food.pending.byUserType(ctx.offset, ctx.userType)
+						PendingFoodQueries.ByUserType.getOptions(
+							state.offset,
+							state.userType
+						).queryKey
 					);
-                    
+
 					break;
 				}
 				case "User ID": {
 					const snapshot = queryClient.getQueryData(
-						queryKeys.food.pending.byUserId(ctx.offset, ctx.userId)
+						PendingFoodQueries.ByUserId.getOptions(state.offset, state.userId)
+							.queryKey
 					);
+
 					break;
 				}
 			}

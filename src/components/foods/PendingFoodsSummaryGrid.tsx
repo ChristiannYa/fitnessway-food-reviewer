@@ -5,11 +5,19 @@ import { useState } from "react";
 import { PendingFoodInformation } from "./PendingFoodInformation";
 
 export const PendingFoodsSummaryGrid = ({
-	pendingFoods
+	pendingFoods,
+	onAccept,
+	onReject
 }: {
 	pendingFoods: PendingFood[];
+	onAccept: (foodId: number) => void;
+	onReject: (foodId: number, reason: string) => void;
 }) => {
 	const [selectedFood, setSelectedFood] = useState<PendingFood | null>(null);
+
+	function handleFoodClick(food: PendingFood) {
+		setSelectedFood(food);
+	}
 
 	if (pendingFoods.length === 0) {
 		return <p className="text-center">No foods available</p>;
@@ -23,7 +31,7 @@ export const PendingFoodsSummaryGrid = ({
 						<div key={pendingFood.id}>
 							<PendingFoodSummary
 								pendingFood={pendingFood}
-								onFoodClick={(food) => setSelectedFood(food)}
+								onFoodClick={handleFoodClick}
 							/>
 						</div>
 					);
@@ -35,7 +43,11 @@ export const PendingFoodsSummaryGrid = ({
 					className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-20"
 				>
 					<div onClick={(e) => e.stopPropagation()}>
-						<PendingFoodInformation pendingFood={selectedFood} />
+						<PendingFoodInformation
+							pendingFood={selectedFood}
+							onAccept={onAccept}
+							onReject={onReject}
+						/>
 					</div>
 				</div>
 			)}

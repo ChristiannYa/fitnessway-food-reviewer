@@ -61,7 +61,7 @@ export async function logout() {
 	const res = await apiClientPub.req<never>({
 		method: "POST",
 		path: "/auth/logout",
-		body: body
+		body
 	});
 
 	await deleteRefreshTokenPxy();

@@ -1,4 +1,4 @@
-import { usePendingFoodsByUserIdQuery } from "@/hooks/queries/foodQueries";
+import { PendingFoodQueries } from "@/hooks/queries/foodQueries";
 import { isStringNullOrEmpty } from "@/utils/textUtils";
 import { useState } from "react";
 import { Spinner } from "@/components/elements/Spinner";
@@ -6,19 +6,27 @@ import { useAutoClear } from "@/hooks/useAutoClear";
 import { PendingFoodsSummaryGrid } from "@/components/foods/PendingFoodsSummaryGrid";
 import { AvailablePages } from "@/components/elements/AvailablePages";
 import { pagination } from "@/constants";
+import { useReviewMutation } from "@/hooks/mutations/foodMutations";
+import type { ReviewPendingFoodReq } from "@/types/foodTypes";
 
 export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
+	const [hasSearched, setHasSearched] = useState(false);
 	const [offset, setOffset] = useState(0);
 	const [userIdQueryParam, setUserIdQueryParam] = useState("");
-	const [hasSearched, setHasSearched] = useState(false);
 
 	const {
 		isError: pfByUserIdQuError,
 		isPending: pfByUserIdQuPending,
 		data: pfByUserIdQuData,
 		refetch: pfByUserIdQuRefetch
-	} = usePendingFoodsByUserIdQuery(offset, userIdQueryParam, {
+	} = PendingFoodQueries.ByUserId.use(offset, userIdQueryParam, {
 		enabled: hasSearched
+	});
+
+	const reviewMutation = useReviewMutation({
+		offset,
+		searchType: "User ID",
+		userId: userIdQueryParam
 	});
 
 	const isDataLoading = pfByUserIdQuPending && hasSearched;
@@ -39,6 +47,10 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 
 	function handlePageChange(page: number) {
 		setOffset((page - 1) * pagination.limit);
+	}
+
+	function handleReview(req: ReviewPendingFoodReq) {
+		reviewMutation.mutate(req);
 	}
 
 	if (!isVisible) return null;
@@ -86,7 +98,16 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 						currentPage={queryData.currentPage}
 						handlePageChange={(page) => handlePageChange(page)}
 					/>
-					<PendingFoodsSummaryGrid pendingFoods={queryData.data} />
+					<PendingFoodsSummaryGrid
+						pendingFoods={queryData.data}
+						onAccept={(foodId) => handleReview({ pendingFoodId: foodId })}
+						onReject={(foodId, reason) =>
+							handleReview({
+								pendingFoodId: foodId,
+								rejectionReason: reason
+							})
+						}
+					/>
 				</>
 			)}
 		</div>
