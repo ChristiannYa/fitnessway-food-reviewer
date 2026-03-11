@@ -1,57 +1,57 @@
 import { PendingFoodQueries } from "@/hooks/queries/foodQueries";
 import { isStringNullOrEmpty } from "@/utils/textUtils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Spinner } from "@/components/elements/Spinner";
-import { useAutoClear } from "@/hooks/useAutoClear";
 import { PendingFoodsSummaryGrid } from "@/components/foods/PendingFoodsSummaryGrid";
 import { AvailablePages } from "@/components/elements/AvailablePages";
 import { pagination } from "@/constants";
 import { useReviewMutation } from "@/hooks/mutations/foodMutations";
-import type { ReviewPendingFoodReq } from "@/types/foodTypes";
+import type { PendingFoodReviewReq } from "@/types/foodTypes";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
-	const [hasSearched, setHasSearched] = useState(false);
+	const queryClient = useQueryClient();
+
 	const [offset, setOffset] = useState(0);
-	const [userIdQueryParam, setUserIdQueryParam] = useState("");
+	const [userIdInput, setUserIdInput] = useState("");
+	const [userIdSearched, setUserIdSearched] = useState("");
 
 	const {
-		isError: pfByUserIdQuError,
-		isPending: pfByUserIdQuPending,
-		data: pfByUserIdQuData,
-		refetch: pfByUserIdQuRefetch
-	} = PendingFoodQueries.ByUserId.use(offset, userIdQueryParam, {
-		enabled: hasSearched
+		isError: pfResError,
+		isFetching: pfFetching,
+		data: pfData,
+		refetch: pfRefetch
+	} = PendingFoodQueries.ByUserId.use(offset, userIdSearched, {
+		enabled: false
 	});
 
 	const reviewMutation = useReviewMutation({
 		offset,
 		searchType: "User ID",
-		userId: userIdQueryParam
+		userId: userIdSearched
 	});
 
-	const isDataLoading = pfByUserIdQuPending && hasSearched;
-
 	const searchFailed = (() => {
-		const apiError = pfByUserIdQuData && !pfByUserIdQuData.success;
-		return hasSearched && !isDataLoading && (pfByUserIdQuError || !!apiError);
+		const apiError = pfData && !pfData.success;
+		return !pfFetching && (pfResError || !!apiError);
 	})();
 
-	useAutoClear(searchFailed, () => setHasSearched(false));
-
-	const queryData = pfByUserIdQuData?.data?.pendingFoodsPagination;
+	const queryData = pfData?.data?.pendingFoodsPagination;
 
 	function handleSearch() {
-		setHasSearched(true);
-		if (queryData || searchFailed) pfByUserIdQuRefetch();
+		setOffset(0);
+		setUserIdSearched(userIdInput);
 	}
 
 	function handlePageChange(page: number) {
 		setOffset((page - 1) * pagination.limit);
 	}
 
-	function handleReview(req: ReviewPendingFoodReq) {
+	function handleReview(req: PendingFoodReviewReq) {
 		reviewMutation.mutate(req);
 	}
+
+	useSearch(userIdSearched, offset, pfRefetch);
 
 	if (!isVisible) return null;
 
@@ -69,15 +69,15 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 					name="user_id"
 					id="user_id"
 					placeholder="User ID"
-					value={userIdQueryParam}
-					onChange={(e) => setUserIdQueryParam(e.target.value)}
+					value={userIdInput}
+					onChange={(e) => setUserIdInput(e.target.value)}
 					className="px-3 py-2 text-center border border-smoke focus:ring-1 focus:ring-mist 
                            focus:outline-0"
 				/>
 
 				<button
 					onClick={handleSearch}
-					disabled={isStringNullOrEmpty(userIdQueryParam)}
+					disabled={isStringNullOrEmpty(userIdInput)}
 					className="py-2 rounded-md bg-smoke text-mist disabled:opacity-50 
                                transition-colors"
 				>
@@ -85,7 +85,7 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 				</button>
 			</div>
 
-			{isDataLoading && (
+			{pfFetching && (
 				<div className="mx-auto">
 					<Spinner size={16} />
 				</div>
@@ -100,7 +100,12 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 					/>
 					<PendingFoodsSummaryGrid
 						pendingFoods={queryData.data}
-						onAccept={(foodId) => handleReview({ pendingFoodId: foodId })}
+						onAccept={(foodId) =>
+							handleReview({
+								pendingFoodId: foodId,
+								rejectionReason: null
+							})
+						}
 						onReject={(foodId, reason) =>
 							handleReview({
 								pendingFoodId: foodId,
@@ -113,3 +118,28 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 		</div>
 	);
 };
+
+/**
+ * Triggers a fetch if `userIdSearched` or `offset` change as long as the data is
+ * not already cached.
+ *
+ * @param userIdSearched - The user ID to search for. No fetch is triggered if invalid.
+ * @param offset - The pagination offset.
+ * @param refetchFn - The function to call when a fetch is needed.
+ */
+function useSearch(userIdSearched: string, offset: number, refetchFn: () => void) {
+	const queryClient = useQueryClient();
+
+	useEffect(() => {
+		// Guard that helps to avoid making a server call on initial mount when
+		// there is no user id set to search
+		if (isStringNullOrEmpty(userIdSearched)) return;
+
+		const pfCache = queryClient.getQueryData(
+			PendingFoodQueries.ByUserId.getOptions(offset, userIdSearched).queryKey
+		);
+		if (pfCache) return;
+
+		refetchFn();
+	}, [userIdSearched, offset]);
+}

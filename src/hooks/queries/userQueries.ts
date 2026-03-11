@@ -1,7 +1,7 @@
 import type { UserRes } from "@/types/userTypes";
 import { apiClientApp } from "@/api/apiClient";
 import { queryKeys } from "@/constants";
-import { useAuthQuery } from "../useAuthQuery";
+import { useAuthQuery } from "@/hooks/useAuthQuery";
 
 export const useUserQuery = () =>
 	useAuthQuery({

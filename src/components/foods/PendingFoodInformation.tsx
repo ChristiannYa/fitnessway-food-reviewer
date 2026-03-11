@@ -36,7 +36,7 @@ export const PendingFoodInformation = ({
 			<PendingFoodBody pendingFoodInformation={pendingFood.information} />
 
 			{/* Handle Review Buttons */}
-			{!isRejecting && (
+			{!isRejecting && !isReviewed(pendingFood.status) && (
 				<div className="flex w-full pb-4 px-4 gap-2">
 					<ActionButton
 						label="Accept"

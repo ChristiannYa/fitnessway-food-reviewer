@@ -15,7 +15,7 @@ export default function Header() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const toggleMenu = () => setIsMenuOpen((prev) => !prev);
 
-	const { isPending: uQuPending, data: uQuData } = useUserQuery();
+	const { isPending: uResPending, data: uResData } = useUserQuery();
 
 	const logoutMutation = useLogoutMutation();
 
@@ -24,22 +24,25 @@ export default function Header() {
 		logoutMutation.mutate(undefined);
 	}
 
-	const user = uQuData?.data?.user;
+	const user = uResData?.data?.user;
 
 	return (
 		<>
 			{/* Main Header */}
-			<header className="p-4 flex items-center bg-burnt text-white shadow-lg">
-				<button
-					onClick={toggleMenu}
-					className="p-2 hover:bg-metal rounded-lg transition-colors"
-					aria-label="Open menu"
-				>
-					<Menu size={24} />
-				</button>
-				<h1 className="ml-4 text-xl font-semibold">
-					<Link to="/">Fitnessway - Food Review</Link>
-				</h1>
+			<header className="p-4 flex items-center justify-between bg-burnt text-white shadow-lg">
+				<div className="flex items-center">
+					<button
+						onClick={toggleMenu}
+						className="p-2 hover:bg-metal rounded-lg transition-colors"
+						aria-label="Open menu"
+					>
+						<Menu size={24} />
+					</button>
+					<h1 className="ml-4 text-xl font-semibold">
+						<Link to="/">Fitnessway - Food Review</Link>
+					</h1>
+				</div>
+				{user && <p className="text-xs opacity-60">{user.id}</p>}
 			</header>
 
 			{/* Side Menu */}
@@ -64,7 +67,7 @@ export default function Header() {
 				<div className="p-4 h-full flex flex-col">
 					<div className="grow">
 						{/* Side Menu - User query loading indicator */}
-						{uQuPending && (
+						{uResPending && (
 							<div className="flex justify-center">
 								<Spinner size={28} />
 							</div>
