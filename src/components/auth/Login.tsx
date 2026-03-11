@@ -1,32 +1,9 @@
-import { login } from "@/auth/authHandlers";
 import type { LoginReq } from "@/schemas/authSchema";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import React from "react";
-import { useAccessTokenStore } from "@/store/accessTokenStore";
+import { useLoginMutation } from "@/hooks/mutations/authMutations";
 
 export function Login() {
-	const router = useRouter();
-
-	const loginMutation = useMutation({
-		mutationFn: login,
-		onSuccess: async (ctx) => {
-			if (!ctx.success) {
-				console.log("error logging in: ", ctx.message);
-				return;
-			}
-
-			// Store just the access token because this is the responsibility of
-			// the client
-			useAccessTokenStore.getState().save(ctx.data.accessToken);
-
-			await router.invalidate();
-			router.navigate({ to: "/" });
-		},
-		onError: (error) => {
-			console.log("error logging in: ", error.message);
-		}
-	});
+	const loginMutation = useLoginMutation();
 
 	const handleLogin = (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();

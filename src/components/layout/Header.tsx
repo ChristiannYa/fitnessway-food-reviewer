@@ -1,11 +1,9 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Home, Menu, ArrowLeftIcon } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { logout } from "@/auth/authHandlers";
 import { useUserQuery } from "@/hooks/queries/userQueries";
 import { Spinner } from "@/components/elements/Spinner";
-import { useAccessTokenStore } from "@/store/accessTokenStore";
+import { useLogoutMutation } from "@/hooks/mutations/authMutations";
 
 const navConfig = {
 	items: [{ to: "/home", label: "Home", icon: Home }],
@@ -14,31 +12,12 @@ const navConfig = {
 };
 
 export default function Header() {
-	const router = useRouter();
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const toggleMenu = () => setIsMenuOpen((prev) => !prev);
 
 	const { isPending: uQuPending, data: uQuData } = useUserQuery();
 
-	const [isOpen, setIsOpen] = useState(false);
-
-	const toggleMenu = () => setIsOpen((prev) => !prev);
-
-	const logoutMutation = useMutation({
-		mutationFn: logout,
-		onSuccess: async (ctx) => {
-			// Clear access token regardless of server response
-			useAccessTokenStore.getState().remove();
-
-			if (!ctx.success) {
-				// Just log error to not block user in their account
-				console.log("error when logging out: ", ctx.message);
-			}
-
-			router.navigate({ to: "/login" });
-		},
-		onError: (error) => {
-			console.log(error.message);
-		}
-	});
+	const logoutMutation = useLogoutMutation();
 
 	function handleLogout() {
 		toggleMenu();
@@ -67,7 +46,7 @@ export default function Header() {
 			<aside
 				className={`fixed top-0 left-0 h-full w-80 bg-burnt text-white shadow-2xl z-50 
                             transform transition-transform duration-300 ease-in-out flex flex-col 
-                            ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+                            ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
 			>
 				{/* Side Menu - Title */}
 				<div className="flex items-center justify-between p-4 border-b border-b-metal">
