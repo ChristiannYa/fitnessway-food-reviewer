@@ -2,14 +2,29 @@ import type { FoodBase, PendingFoodStatus } from "@/types/foodTypes";
 
 export const isReviewed = (status: PendingFoodStatus): boolean => status !== "PENDING";
 
-export const getPendingFoodStatusColor = (status: PendingFoodStatus): string => {
+/**
+ * @param status The pending food status
+ * @returns tailwind color e.g., "[]-emerald-500". Prefix (text-, bg-) should be provided when used
+ */
+export const getPendingFoodStatusColorTw = (status: PendingFoodStatus): string => {
 	switch (status) {
 		case "APPROVED":
-			return "text-emerald-500";
+			return "emerald-500";
 		case "PENDING":
-			return "text-amber-500";
+			return "amber-500";
 		case "REJECTED":
-			return "text-red-500";
+			return "red-500";
+	}
+};
+
+export const getPendingFoodStatusColorHex = (status: PendingFoodStatus): string => {
+	switch (status) {
+		case "APPROVED":
+			return "#10b981";
+		case "PENDING":
+			return "#f59e0b";
+		case "REJECTED":
+			return "#ef4444";
 	}
 };
 

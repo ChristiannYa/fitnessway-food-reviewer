@@ -1,22 +1,31 @@
 import type { PendingFood } from "@/types/foodTypes";
-import { getAmountPerServingView, getPendingFoodStatusColor } from "@/utils/foodUtils";
+import {
+	getAmountPerServingView,
+	getPendingFoodStatusColorHex,
+	getPendingFoodStatusColorTw
+} from "@/utils/foodUtils";
 import { formatIsoDate } from "@/utils/textUtils";
 import { useState } from "react";
-import { PendingFoodInformation } from "./PendingFoodInformation";
+import { PendingFoodInformation } from "./Information";
 
-export const PendingFoodsSummaryGrid = ({
+export const Grid = ({
 	pendingFoods,
-	onAccept,
+	onApprove,
 	onReject
 }: {
 	pendingFoods: PendingFood[];
-	onAccept: (foodId: number) => void;
+	onApprove: (foodId: number) => void;
 	onReject: (foodId: number, reason: string) => void;
 }) => {
-	const [selectedFood, setSelectedFood] = useState<PendingFood | null>(null);
+	const [selectedFoodId, setSelectedFoodId] = useState<number | null>(null);
+
+	const selectedFood =
+		selectedFoodId !== null
+			? pendingFoods.find((f) => f.id === selectedFoodId)
+			: null;
 
 	function handleFoodClick(food: PendingFood) {
-		setSelectedFood(food);
+		setSelectedFoodId(food.id);
 	}
 
 	if (pendingFoods.length === 0) {
@@ -39,13 +48,13 @@ export const PendingFoodsSummaryGrid = ({
 			</div>
 			{selectedFood && (
 				<div
-					onClick={() => setSelectedFood(null)}
+					onClick={() => setSelectedFoodId(null)}
 					className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-20"
 				>
 					<div onClick={(e) => e.stopPropagation()}>
 						<PendingFoodInformation
 							pendingFood={selectedFood}
-							onAccept={onAccept}
+							onApprove={onApprove}
 							onReject={onReject}
 						/>
 					</div>
@@ -64,7 +73,7 @@ const PendingFoodSummary = ({
 }) => {
 	const foodBase = pendingFood.information.base;
 	const amountPerServing = getAmountPerServingView(pendingFood.information.base);
-	const foodStatusColor = getPendingFoodStatusColor(pendingFood.status);
+	const statusColor = getPendingFoodStatusColorHex(pendingFood.status);
 
 	return (
 		<div
@@ -76,7 +85,14 @@ const PendingFoodSummary = ({
 			<span className="mt-1 w-full border-t border-dotted border-smoke"></span>
 
 			<div className="flex flex-col px-3 pt-3 leading-snug">
-				<p className={`font-semibold ${foodStatusColor}`}>{pendingFood.status}</p>
+				<p
+					style={{
+						color: statusColor
+					}}
+					className="font-semibold"
+				>
+					{pendingFood.status}
+				</p>
 				<p className="font-semibold truncate">{foodBase.name}</p>
 				<p className="opacity-80">{foodBase.brand}</p>
 				<p className="opacity-80">{amountPerServing}</p>

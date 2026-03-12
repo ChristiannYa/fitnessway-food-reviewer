@@ -40,6 +40,11 @@ export type PendingFood = {
 	rejectionReason?: string;
 };
 
+export type PendingFoodReview = Pick<
+	PendingFood,
+	"status" | "createdBy" | "reviewedBy" | "reviewedAt" | "rejectionReason"
+>;
+
 export type PendingFoodsByUserIdRes = {
 	pendingFoodsPagination: PaginationResult<PendingFood>;
 };

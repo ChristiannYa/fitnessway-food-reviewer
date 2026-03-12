@@ -1,8 +1,17 @@
 import { mutationKeys } from "@/constants";
-import type { PendingFoodReviewReq } from "@/types/foodTypes";
+import type {
+	PendingFoodReviewReq,
+	PendingFoodReviewRes,
+	PendingFoodsByUserIdRes,
+	PendingFoodsByUserTypeRes
+} from "@/types/foodTypes";
 import type { SearchOptions, UserType } from "@/types/userTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PendingFoodQueries } from "../queries/foodQueries";
+import { produce } from "immer";
+import { useUserQuery } from "../queries/userQueries";
+import type { ClientResponse } from "@/utils/clientUtils";
+import { apiClientApp } from "@/api/apiClient";
 
 type ReviewMutationState = { offset: number } & (
 	| { searchType: Extract<SearchOptions, "User ID">; userId: string }
@@ -11,71 +20,87 @@ type ReviewMutationState = { offset: number } & (
 
 export const useReviewMutation = (state: ReviewMutationState) => {
 	const queryClient = useQueryClient();
+	const { data: uResData } = useUserQuery();
 
-	return useMutation({
-		mutationFn: (req: PendingFoodReviewReq) => {
-			/*
-			apiClientApp.req<ReviewPendingFoodRes>({
+	const reviewer = uResData?.data?.user;
+
+	return useMutation<
+		ClientResponse<PendingFoodReviewRes>, // TData - mutationFn return
+		Error, // TError
+		PendingFoodReviewReq, // TVariables
+		{
+			snapshot:
+				| ClientResponse<PendingFoodsByUserIdRes | PendingFoodsByUserTypeRes>
+				| undefined;
+		} // TContext
+	>({
+		mutationFn: (req: PendingFoodReviewReq) =>
+			apiClientApp.req<PendingFoodReviewRes>({
 				method: "PUT",
 				path: "/food/pending/review",
 				body: req
 			}),
-            */
-
-			console.log("mutation blocked, req: ", req);
-			return;
-		},
-		onMutate: async () => {
+		onMutate: async (ctx) => {
 			switch (state.searchType) {
 				case "User Type": {
-					const snapshot = queryClient.getQueryData(
-						PendingFoodQueries.ByUserType.getOptions(
-							state.offset,
-							state.userType
-						).queryKey
-					);
-
-					if (!snapshot) {
-						console.log("no pending foods by user type cache found");
-						return;
-					}
-
-					if (snapshot.data === null) {
-						console.log("pending foods by user type not available");
-						return;
-					}
-
-					const pendingFoods = snapshot.data.pendingFoodsPagination.data;
-
-					pendingFoods.map((food) => {
-						console.log("food id: ", food.id);
-					});
-
-					break;
+					return { snapshot: undefined };
 				}
 				case "User ID": {
-					const snapshot = queryClient.getQueryData(
-						PendingFoodQueries.ByUserId.getOptions(state.offset, state.userId)
-							.queryKey
+					const queryOptions = PendingFoodQueries.ByUserId.getOptions(
+						state.offset,
+						state.userId
 					);
 
-					if (!snapshot) {
-						console.log("no pending foods by user id cache found");
-						return;
-					}
+					const snapshot = queryClient.getQueryData(queryOptions.queryKey);
 
-					if (snapshot.data === null) {
-						console.log("pending foods by user id not available");
-						return;
-					}
+					queryClient.setQueryData(
+						queryOptions.queryKey,
+						produce<typeof snapshot>((draft) => {
+							if (!draft?.data || !reviewer) return;
 
-					const pendingFoods = snapshot.data.pendingFoodsPagination.data;
+							const food = draft.data.pendingFoodsPagination.data.find(
+								(f) => f.id === ctx.pendingFoodId
+							);
+							if (!food) return;
 
-					pendingFoods.map((food) => {
-						console.log("food id: ", food.id);
-					});
+							const isAccepted = ctx.rejectionReason === null;
 
-					break;
+							food.status = isAccepted ? "APPROVED" : "REJECTED";
+							food.reviewedBy = reviewer.id;
+							food.reviewedAt = new Date().toISOString();
+							food.rejectionReason = ctx.rejectionReason ?? undefined;
+						})
+					);
+
+					return { snapshot };
+				}
+			}
+		},
+		onError: (err, _, ctx) => {
+			console.log("review mutation error: ", err.message);
+
+			if (!ctx?.snapshot) return;
+
+			switch (state.searchType) {
+				case "User Type": {
+					const queryOptions = PendingFoodQueries.ByUserType.getOptions(
+						state.offset,
+						state.userType
+					);
+
+					queryClient.setQueryData(queryOptions.queryKey, ctx.snapshot);
+
+					return;
+				}
+				case "User ID": {
+					const queryOptions = PendingFoodQueries.ByUserId.getOptions(
+						state.offset,
+						state.userId
+					);
+
+					queryClient.setQueryData(queryOptions.queryKey, ctx.snapshot);
+
+					return;
 				}
 			}
 		},

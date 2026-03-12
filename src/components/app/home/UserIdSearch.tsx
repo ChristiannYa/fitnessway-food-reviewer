@@ -2,7 +2,7 @@ import { PendingFoodQueries } from "@/hooks/queries/foodQueries";
 import { isStringNullOrEmpty } from "@/utils/textUtils";
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/elements/Spinner";
-import { PendingFoodsSummaryGrid } from "@/components/foods/PendingFoodsSummaryGrid";
+import { Grid } from "@/components/foods/pending/Grid";
 import { AvailablePages } from "@/components/elements/AvailablePages";
 import { pagination } from "@/constants";
 import { useReviewMutation } from "@/hooks/mutations/foodMutations";
@@ -10,8 +10,6 @@ import type { PendingFoodReviewReq } from "@/types/foodTypes";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
-	const queryClient = useQueryClient();
-
 	const [offset, setOffset] = useState(0);
 	const [userIdInput, setUserIdInput] = useState("");
 	const [userIdSearched, setUserIdSearched] = useState("");
@@ -72,7 +70,7 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 					value={userIdInput}
 					onChange={(e) => setUserIdInput(e.target.value)}
 					className="px-3 py-2 text-center border border-smoke focus:ring-1 focus:ring-mist 
-                           focus:outline-0"
+                               focus:outline-0"
 				/>
 
 				<button
@@ -98,9 +96,9 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 						currentPage={queryData.currentPage}
 						handlePageChange={(page) => handlePageChange(page)}
 					/>
-					<PendingFoodsSummaryGrid
+					<Grid
 						pendingFoods={queryData.data}
-						onAccept={(foodId) =>
+						onApprove={(foodId) =>
 							handleReview({
 								pendingFoodId: foodId,
 								rejectionReason: null
