@@ -17,7 +17,7 @@ export const Summary = ({
 		<div
 			onClick={() => onFoodClick(pendingFood)}
 			className="flex flex-col w-full pb-3 pt-1 border-2 border-smoke hover:border-mist 
-                       cursor-default rounded-lg text-lg"
+                       cursor-pointer rounded-lg text-lg"
 		>
 			<p className="text-center">{formatIsoDate(pendingFood.createdAt)}</p>
 			<span className="mt-1 w-full border-t border-dotted border-smoke"></span>

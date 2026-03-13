@@ -24,13 +24,17 @@ export const UserIdSearch = ({
 }) => {
 	const [offset, setOffset] = useState(0);
 	const [userIdInput, setUserIdInput] = useState("");
+
 	const [userIdSearched, setUserIdSearched] = useState("");
+	const [statusFilterInSearch, setStatusFilterInSearch] =
+		useState<PendingFoodStatus | null>(null);
+
 	const [selectedFood, setSelectedFood] = useState<PendingFood | null>(null);
 
-	const params: PendingFoodsReqParams<{ userId: string }> = {
+	const reqParams: PendingFoodsReqParams<{ userId: string }> = {
 		userId: userIdSearched,
 		offset,
-		status: currentPendingStatus ?? undefined
+		status: statusFilterInSearch ?? undefined
 	};
 
 	const {
@@ -38,14 +42,14 @@ export const UserIdSearch = ({
 		isFetching: pfFetching,
 		data: pfData,
 		refetch: pfRefetch
-	} = PendingFoodQueries.ByUserId.use(params, { enabled: false });
+	} = PendingFoodQueries.ByUserId.use(reqParams, { enabled: false });
 
 	const reviewMutation = useReviewMutation(
 		{
 			offset,
 			searchType: "User ID",
 			userId: userIdSearched,
-			status: currentPendingStatus ?? undefined
+			status: statusFilterInSearch ?? undefined
 		},
 		(optReview) => {
 			setSelectedFood(optReview);
@@ -61,6 +65,7 @@ export const UserIdSearch = ({
 
 	function handleSearch() {
 		setOffset(0);
+		setStatusFilterInSearch(currentPendingStatus);
 		setUserIdSearched(userIdInput);
 	}
 
@@ -72,7 +77,7 @@ export const UserIdSearch = ({
 		reviewMutation.mutate(req);
 	}
 
-	useSearch(params, pfRefetch);
+	useSearch(reqParams, pfRefetch);
 
 	if (!isVisible) return null;
 
@@ -92,15 +97,15 @@ export const UserIdSearch = ({
 					placeholder="User ID"
 					value={userIdInput}
 					onChange={(e) => setUserIdInput(e.target.value)}
-					className="px-3 py-2 text-center border border-smoke focus:ring-1 focus:ring-mist 
+					className="px-3 py-2 text-center border border-smoke focus:ring-1 focus:ring-dry-green 
                                focus:outline-0"
 				/>
 
 				<button
 					onClick={handleSearch}
 					disabled={isStringNullOrEmpty(userIdInput)}
-					className="py-2 rounded-md bg-smoke text-mist cursor-pointer
-                               disabled:opacity-50 transition-colors"
+					className="py-2 rounded-4xl bg-smoke text-mist cursor-pointer
+                               disabled:opacity-20 disabled:cursor-default transition-colors"
 				>
 					Search
 				</button>
