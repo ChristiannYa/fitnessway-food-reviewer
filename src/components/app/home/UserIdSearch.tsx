@@ -6,22 +6,36 @@ import { Grid } from "@/components/foods/pending/Grid";
 import { AvailablePages } from "@/components/elements/AvailablePages";
 import { pagination } from "@/constants";
 import { useReviewMutation } from "@/hooks/mutations/foodMutations";
-import type { PendingFoodReviewReq } from "@/types/foodTypes";
+import type {
+	PendingFoodReviewReq,
+	PendingFoodsReqParams,
+	PendingFoodStatus
+} from "@/types/foodTypes";
 import { useQueryClient } from "@tanstack/react-query";
 
-export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
+export const UserIdSearch = ({
+	isVisible,
+	currentPendingStatus
+}: {
+	isVisible: boolean;
+	currentPendingStatus: PendingFoodStatus | null;
+}) => {
 	const [offset, setOffset] = useState(0);
 	const [userIdInput, setUserIdInput] = useState("");
 	const [userIdSearched, setUserIdSearched] = useState("");
+
+	const params: PendingFoodsReqParams<{ userId: string }> = {
+		userId: userIdSearched,
+		offset,
+		status: currentPendingStatus ?? undefined
+	};
 
 	const {
 		isError: pfResError,
 		isFetching: pfFetching,
 		data: pfData,
 		refetch: pfRefetch
-	} = PendingFoodQueries.ByUserId.use(offset, userIdSearched, {
-		enabled: false
-	});
+	} = PendingFoodQueries.ByUserId.use(params, { enabled: false });
 
 	const reviewMutation = useReviewMutation({
 		offset,
@@ -49,7 +63,7 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 		reviewMutation.mutate(req);
 	}
 
-	useSearch(userIdSearched, offset, pfRefetch);
+	useSearch(params, pfRefetch);
 
 	if (!isVisible) return null;
 
@@ -118,26 +132,29 @@ export const UserIdSearch = ({ isVisible }: { isVisible: boolean }) => {
 };
 
 /**
- * Triggers a fetch if `userIdSearched` or `offset` change as long as the data is
+ * Triggers a fetch if any property from `params` change as long as the data is
  * not already cached.
  *
  * @param userIdSearched - The user ID to search for. No fetch is triggered if invalid.
  * @param offset - The pagination offset.
  * @param refetchFn - The function to call when a fetch is needed.
  */
-function useSearch(userIdSearched: string, offset: number, refetchFn: () => void) {
+function useSearch(
+	params: PendingFoodsReqParams<{ userId: string }>,
+	refetchFn: () => void
+) {
 	const queryClient = useQueryClient();
 
 	useEffect(() => {
 		// Guard that helps to avoid making a server call on initial mount when
 		// there is no user id set to search
-		if (isStringNullOrEmpty(userIdSearched)) return;
+		if (isStringNullOrEmpty(params.userId)) return;
 
 		const pfCache = queryClient.getQueryData(
-			PendingFoodQueries.ByUserId.getOptions(offset, userIdSearched).queryKey
+			PendingFoodQueries.ByUserId.getOptions(params).queryKey
 		);
 		if (pfCache) return;
 
 		refetchFn();
-	}, [userIdSearched, offset]);
+	}, [params]);
 }

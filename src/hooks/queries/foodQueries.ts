@@ -3,7 +3,8 @@ import { pagination, queryKeys } from "@/constants";
 import type { AppQueryOptions } from "@/types/appTypes";
 import type {
 	PendingFoodsByUserIdRes,
-	PendingFoodsByUserTypeRes
+	PendingFoodsByUserTypeRes,
+	PendingFoodsReqParams
 } from "@/types/foodTypes";
 import type { UserType } from "@/types/userTypes";
 import type { ClientResponse } from "@/utils/clientUtils";
@@ -11,74 +12,59 @@ import { queryOptions, useQuery as rqUseQuery } from "@tanstack/react-query";
 
 export const PendingFoodQueries = {
 	ByUserId: {
-		getOptions: (offset: number, userId: string) =>
+		getOptions: (params: PendingFoodsReqParams<{ userId: string }>) =>
 			queryOptions({
-				queryKey: queryKeys.food.pending.byUserId(offset, userId),
+				queryKey: queryKeys.food.pending.byUserId(params),
 				queryFn: () =>
 					apiClientApp.req<PendingFoodsByUserIdRes>({
 						method: "GET",
 						path: "/food/pending/find-by/user-id",
 						params: {
 							limit: `${pagination.limit}`,
-							offset: `${offset}`,
-							userId: userId
+							offset: `${params.offset}`,
+							userId: params.userId,
+							...(params.status && { pendingStatus: params.status })
 						}
 					})
 			}),
 		use: (
-			offset: number,
-			userId: string,
+			params: PendingFoodsReqParams<{ userId: string }>,
 			options?: AppQueryOptions<
 				ClientResponse<PendingFoodsByUserIdRes>,
 				ReturnType<typeof queryKeys.food.pending.byUserId>
 			>
 		) =>
 			rqUseQuery({
-				...PendingFoodQueries.ByUserId.getOptions(offset, userId),
+				...PendingFoodQueries.ByUserId.getOptions(params),
 				...options
 			})
 	},
 	ByUserType: {
-		getOptions: (offset: number, userType: UserType) =>
+		getOptions: (params: PendingFoodsReqParams<{ userType: UserType }>) =>
 			queryOptions({
-				queryKey: queryKeys.food.pending.byUserType(offset, userType),
+				queryKey: queryKeys.food.pending.byUserType(params),
 				queryFn: () =>
 					apiClientApp.req<PendingFoodsByUserTypeRes>({
 						method: "GET",
 						path: "/food/pending/find-by/user-type",
 						params: {
 							limit: `${pagination.limit}`,
-							offset: `${offset}`,
-							userType: userType
+							offset: `${params.offset}`,
+							userType: params.userType,
+							...(params.status && { pendingStatus: params.status })
 						}
 					})
 			}),
 		use: (
-			offset: number,
-			userType: UserType,
+			params: PendingFoodsReqParams<{ userType: UserType }>,
 			options?: AppQueryOptions<
 				ClientResponse<PendingFoodsByUserIdRes>,
 				ReturnType<typeof queryKeys.food.pending.byUserType>
 			>
 		) =>
 			rqUseQuery({
-				...PendingFoodQueries.ByUserType.getOptions(offset, userType),
+				...PendingFoodQueries.ByUserType.getOptions(params),
 				...options
 			})
 	}
 };
-
-export const getPendingFoodsByUserIdOptions = (offset: number, userId: string) =>
-	queryOptions({
-		queryKey: queryKeys.food.pending.byUserId(offset, userId),
-		queryFn: () =>
-			apiClientApp.req<PendingFoodsByUserIdRes>({
-				method: "GET",
-				path: "/food/pending/find-by/user-id",
-				params: {
-					limit: `${pagination.limit}`,
-					offset: `${offset}`,
-					userId: userId
-				}
-			})
-	});

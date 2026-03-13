@@ -6,7 +6,6 @@ import type { NutrientInFood } from "@/types/nutrientTypes";
 import {
 	getAmountPerServingView,
 	getPendingFoodStatusColorHex,
-	getPendingFoodStatusColorTw,
 	isReviewed
 } from "@/utils/foodUtils";
 import { formatIsoDate } from "@/utils/textUtils";

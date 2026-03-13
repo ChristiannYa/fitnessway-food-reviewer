@@ -1,11 +1,12 @@
 import type { PaginationResult } from "@/types/appTypes";
 import type { NutrientEntry, NutrientInFood } from "@/types/nutrientTypes";
+import type { UserType } from "./userTypes";
 
 export const SERVING_UNIT = ["G", "MG", "MCG", "ML", "OZ", "KCAL"] as const;
 
 export type ServingUnit = (typeof SERVING_UNIT)[number];
 
-export const PENDING_FOOD_STATUS = ["PENDING", "APPROVED", "REJECTED"] as const;
+export const PENDING_FOOD_STATUS = ["APPROVED", "PENDING", "REJECTED"] as const;
 
 export type PendingFoodStatus = (typeof PENDING_FOOD_STATUS)[number];
 
@@ -44,6 +45,12 @@ export type PendingFoodReview = Pick<
 	PendingFood,
 	"status" | "createdBy" | "reviewedBy" | "reviewedAt" | "rejectionReason"
 >;
+
+export type PendingFoodsReqParams<T extends { userId: string } | { userType: UserType }> =
+	{
+		offset: number;
+		status?: PendingFoodStatus;
+	} & T;
 
 export type PendingFoodsByUserIdRes = {
 	pendingFoodsPagination: PaginationResult<PendingFood>;

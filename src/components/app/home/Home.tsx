@@ -1,28 +1,48 @@
 import { useState } from "react";
-import { SearchOption } from "@/components/app/home/SearchOption";
 import { UserIdSearch } from "@/components/app/home/UserIdSearch";
-import { SEARCH_OPTIONS } from "@/types/userTypes";
-import type { SearchOptions } from "@/types/userTypes"
+import type { UserScope as TUserScope } from "@/types/userTypes";
+import { PendingFilters } from "./PendingFilters";
+import { UserScope } from "./UserScope";
+import type { PendingFoodStatus } from "@/types/foodTypes";
 
 export function Home() {
-	const [searchOption, setSearchOption] = useState<SearchOptions | null>(null);
+	const [currentUserScope, setCurrentUserScope] = useState<TUserScope | null>(null);
+	const [currentPendingFilter, setCurrentPendingFilter] =
+		useState<PendingFoodStatus | null>(null);
+
+	function handleUserScopeClick(scope: TUserScope) {
+		if (scope === currentUserScope) {
+			setCurrentUserScope(null);
+		} else {
+			setCurrentUserScope(scope);
+		}
+	}
+
+	function handlePendingFilterClick(filter: PendingFoodStatus) {
+		if (filter === currentPendingFilter) {
+			setCurrentPendingFilter(null);
+		} else {
+			setCurrentPendingFilter(filter);
+		}
+	}
 
 	return (
 		<div className="min-h-screen bg-charcoal text-mist flex flex-col items-center pt-12">
 			<div className="flex flex-col items-center gap-2 w-80">
-				<div className="flex gap-x-4">
-					{Object.values(SEARCH_OPTIONS).map((option) => {
-						return (
-							<SearchOption
-								key={option}
-								text={option}
-								isSelected={searchOption === option}
-								onClick={() => setSearchOption(option)}
-							/>
-						);
-					})}
+				<div className="flex flex-col items-center gap-2">
+					<UserScope
+						currentScope={currentUserScope}
+						onScopeSelection={handleUserScopeClick}
+					/>
+					<PendingFilters
+						currentFilter={currentPendingFilter}
+						onFilterSelection={handlePendingFilterClick}
+					/>
 				</div>
-				<UserIdSearch isVisible={searchOption === "User ID"} />
+				<UserIdSearch
+					isVisible={currentUserScope === "User ID"}
+					currentPendingStatus={currentPendingFilter}
+				/>
 			</div>
 		</div>
 	);

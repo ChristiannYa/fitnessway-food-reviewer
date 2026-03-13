@@ -3,9 +3,10 @@ import type {
 	PendingFoodReviewReq,
 	PendingFoodReviewRes,
 	PendingFoodsByUserIdRes,
-	PendingFoodsByUserTypeRes
+	PendingFoodsByUserTypeRes,
+	PendingFoodStatus
 } from "@/types/foodTypes";
-import type { SearchOptions, UserType } from "@/types/userTypes";
+import type { UserScope, UserType } from "@/types/userTypes";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PendingFoodQueries } from "../queries/foodQueries";
 import { produce } from "immer";
@@ -13,9 +14,9 @@ import { useUserQuery } from "../queries/userQueries";
 import type { ClientResponse } from "@/utils/clientUtils";
 import { apiClientApp } from "@/api/apiClient";
 
-type ReviewMutationState = { offset: number } & (
-	| { searchType: Extract<SearchOptions, "User ID">; userId: string }
-	| { searchType: Extract<SearchOptions, "User Type">; userType: UserType }
+type ReviewMutationState = { offset: number; status?: PendingFoodStatus } & (
+	| { searchType: Extract<UserScope, "User ID">; userId: string }
+	| { searchType: Extract<UserScope, "User Type">; userType: UserType }
 );
 
 export const useReviewMutation = (state: ReviewMutationState) => {
@@ -46,11 +47,7 @@ export const useReviewMutation = (state: ReviewMutationState) => {
 					return { snapshot: undefined };
 				}
 				case "User ID": {
-					const queryOptions = PendingFoodQueries.ByUserId.getOptions(
-						state.offset,
-						state.userId
-					);
-
+					const queryOptions = PendingFoodQueries.ByUserId.getOptions(state);
 					const snapshot = queryClient.getQueryData(queryOptions.queryKey);
 
 					queryClient.setQueryData(
@@ -78,28 +75,17 @@ export const useReviewMutation = (state: ReviewMutationState) => {
 		},
 		onError: (err, _, ctx) => {
 			console.log("review mutation error: ", err.message);
-
 			if (!ctx?.snapshot) return;
 
 			switch (state.searchType) {
 				case "User Type": {
-					const queryOptions = PendingFoodQueries.ByUserType.getOptions(
-						state.offset,
-						state.userType
-					);
-
+					const queryOptions = PendingFoodQueries.ByUserType.getOptions(state);
 					queryClient.setQueryData(queryOptions.queryKey, ctx.snapshot);
-
 					return;
 				}
 				case "User ID": {
-					const queryOptions = PendingFoodQueries.ByUserId.getOptions(
-						state.offset,
-						state.userId
-					);
-
+					const queryOptions = PendingFoodQueries.ByUserId.getOptions(state);
 					queryClient.setQueryData(queryOptions.queryKey, ctx.snapshot);
-
 					return;
 				}
 			}
