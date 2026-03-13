@@ -7,11 +7,13 @@ import { AvailablePages } from "@/components/elements/AvailablePages";
 import { pagination } from "@/constants";
 import { useReviewMutation } from "@/hooks/mutations/foodMutations";
 import type {
+	PendingFood,
 	PendingFoodReviewReq,
 	PendingFoodsReqParams,
 	PendingFoodStatus
 } from "@/types/foodTypes";
 import { useQueryClient } from "@tanstack/react-query";
+import { Information } from "@/components/foods/pending/Information";
 
 export const UserIdSearch = ({
 	isVisible,
@@ -23,6 +25,7 @@ export const UserIdSearch = ({
 	const [offset, setOffset] = useState(0);
 	const [userIdInput, setUserIdInput] = useState("");
 	const [userIdSearched, setUserIdSearched] = useState("");
+	const [selectedFood, setSelectedFood] = useState<PendingFood | null>(null);
 
 	const params: PendingFoodsReqParams<{ userId: string }> = {
 		userId: userIdSearched,
@@ -37,11 +40,17 @@ export const UserIdSearch = ({
 		refetch: pfRefetch
 	} = PendingFoodQueries.ByUserId.use(params, { enabled: false });
 
-	const reviewMutation = useReviewMutation({
-		offset,
-		searchType: "User ID",
-		userId: userIdSearched
-	});
+	const reviewMutation = useReviewMutation(
+		{
+			offset,
+			searchType: "User ID",
+			userId: userIdSearched,
+			status: currentPendingStatus ?? undefined
+		},
+		(optReview) => {
+			setSelectedFood(optReview);
+		}
+	);
 
 	const searchFailed = (() => {
 		const apiError = pfData && !pfData.success;
@@ -90,8 +99,8 @@ export const UserIdSearch = ({
 				<button
 					onClick={handleSearch}
 					disabled={isStringNullOrEmpty(userIdInput)}
-					className="py-2 rounded-md bg-smoke text-mist disabled:opacity-50 
-                               transition-colors"
+					className="py-2 rounded-md bg-smoke text-mist cursor-pointer
+                               disabled:opacity-50 transition-colors"
 				>
 					Search
 				</button>
@@ -108,24 +117,24 @@ export const UserIdSearch = ({
 					<AvailablePages
 						pageCount={queryData.pageCount}
 						currentPage={queryData.currentPage}
-						handlePageChange={(page) => handlePageChange(page)}
+						handlePageChange={handlePageChange}
 					/>
-					<Grid
-						pendingFoods={queryData.data}
-						onApprove={(foodId) =>
-							handleReview({
-								pendingFoodId: foodId,
-								rejectionReason: null
-							})
-						}
-						onReject={(foodId, reason) =>
-							handleReview({
-								pendingFoodId: foodId,
-								rejectionReason: reason
-							})
-						}
-					/>
+					<Grid pendingFoods={queryData.data} onFoodClick={setSelectedFood} />
 				</>
+			)}
+
+			{selectedFood && (
+				<div
+					onClick={() => setSelectedFood(null)}
+					className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-20"
+				>
+					<div onClick={(e) => e.stopPropagation()}>
+						<Information
+							pendingFood={selectedFood}
+							onHandleReview={handleReview}
+						/>
+					</div>
+				</div>
 			)}
 		</div>
 	);

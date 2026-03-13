@@ -1,5 +1,5 @@
 import type { PendingFoodReview } from "@/types/foodTypes";
-import { getPendingFoodStatusColorHex } from "@/utils/foodUtils";
+import { getPendingFoodStatusUi } from "@/utils/foodUtils";
 import { formatIsoDate } from "@/utils/textUtils";
 import { Minus } from "lucide-react";
 
@@ -10,11 +10,11 @@ export const ReviewInformation = ({
 	review: PendingFoodReview;
 	onClose: () => void;
 }) => {
-	const statusColor = getPendingFoodStatusColorHex(review.status);
+	const { accentHex } = getPendingFoodStatusUi(review.status);
 
 	return (
 		<div
-			style={{ border: `solid 2px ${statusColor}80`, borderRadius: 12 }}
+			style={{ border: `solid 2px ${accentHex}80`, borderRadius: 12 }}
 			className="w-full h-full absolute py-2 bg-black/60 backdrop-blur-md"
 		>
 			<div className="flex flex-col gap-4 px-4 relative h-full">

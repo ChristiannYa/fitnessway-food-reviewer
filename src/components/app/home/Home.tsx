@@ -1,29 +1,21 @@
 import { useState } from "react";
 import { UserIdSearch } from "@/components/app/home/UserIdSearch";
 import type { UserScope as TUserScope } from "@/types/userTypes";
-import { PendingFilters } from "./PendingFilters";
+import { StatusFilters } from "./StatusFilters";
 import { UserScope } from "./UserScope";
 import type { PendingFoodStatus } from "@/types/foodTypes";
 
-export function Home() {
+export const Home = () => {
 	const [currentUserScope, setCurrentUserScope] = useState<TUserScope | null>(null);
-	const [currentPendingFilter, setCurrentPendingFilter] =
+	const [currentStatusFilter, setCurrentStatusFilter] =
 		useState<PendingFoodStatus | null>(null);
 
 	function handleUserScopeClick(scope: TUserScope) {
-		if (scope === currentUserScope) {
-			setCurrentUserScope(null);
-		} else {
-			setCurrentUserScope(scope);
-		}
+		setCurrentUserScope(scope === currentUserScope ? null : scope);
 	}
 
-	function handlePendingFilterClick(filter: PendingFoodStatus) {
-		if (filter === currentPendingFilter) {
-			setCurrentPendingFilter(null);
-		} else {
-			setCurrentPendingFilter(filter);
-		}
+	function handleStatusFilterClick(filter: PendingFoodStatus) {
+		setCurrentStatusFilter(filter === currentStatusFilter ? null : filter);
 	}
 
 	return (
@@ -34,16 +26,16 @@ export function Home() {
 						currentScope={currentUserScope}
 						onScopeSelection={handleUserScopeClick}
 					/>
-					<PendingFilters
-						currentFilter={currentPendingFilter}
-						onFilterSelection={handlePendingFilterClick}
+					<StatusFilters
+						currentStatus={currentStatusFilter}
+						onStatusSelection={handleStatusFilterClick}
 					/>
 				</div>
 				<UserIdSearch
 					isVisible={currentUserScope === "User ID"}
-					currentPendingStatus={currentPendingFilter}
+					currentPendingStatus={currentStatusFilter}
 				/>
 			</div>
 		</div>
 	);
-}
+};

@@ -1,5 +1,7 @@
 import { mutationKeys } from "@/constants";
+import type { queryKeys } from "@/constants";
 import type {
+	PendingFood,
 	PendingFoodReviewReq,
 	PendingFoodReviewRes,
 	PendingFoodsByUserIdRes,
@@ -19,7 +21,18 @@ type ReviewMutationState = { offset: number; status?: PendingFoodStatus } & (
 	| { searchType: Extract<UserScope, "User Type">; userType: UserType }
 );
 
-export const useReviewMutation = (state: ReviewMutationState) => {
+type SnapshotCtx =
+	| ClientResponse<PendingFoodsByUserIdRes | PendingFoodsByUserTypeRes>
+	| undefined;
+
+type QueryKeyByStatusCtx =
+	| (ReturnType<typeof queryKeys.food.pending.byUserId> | undefined)
+	| (ReturnType<typeof queryKeys.food.pending.byUserType> | undefined);
+
+export const useReviewMutation = (
+	state: ReviewMutationState,
+	onOptUpdate: (optReview: PendingFood) => void
+) => {
 	const queryClient = useQueryClient();
 	const { data: uResData } = useUserQuery();
 
@@ -30,46 +43,91 @@ export const useReviewMutation = (state: ReviewMutationState) => {
 		Error, // TError
 		PendingFoodReviewReq, // TVariables
 		{
-			snapshot:
-				| ClientResponse<PendingFoodsByUserIdRes | PendingFoodsByUserTypeRes>
-				| undefined;
+			snapshot: SnapshotCtx;
+			snapshotByStatus: SnapshotCtx;
+			queryKeyByStatus: QueryKeyByStatusCtx;
 		} // TContext
 	>({
-		mutationFn: (req: PendingFoodReviewReq) =>
-			apiClientApp.req<PendingFoodReviewRes>({
+		mutationFn: (req: PendingFoodReviewReq) => {
+			return apiClientApp.req<PendingFoodReviewRes>({
 				method: "PUT",
 				path: "/food/pending/review",
 				body: req
-			}),
+			});
+		},
 		onMutate: async (ctx) => {
 			switch (state.searchType) {
 				case "User Type": {
-					return { snapshot: undefined };
+					return {
+						snapshot: undefined,
+						snapshotByStatus: undefined,
+						queryKeyByStatus: undefined
+					};
 				}
 				case "User ID": {
-					const queryOptions = PendingFoodQueries.ByUserId.getOptions(state);
+					const { searchType, ...params } = state;
+
+					const queryOptions = PendingFoodQueries.ByUserId.getOptions(params);
 					const snapshot = queryClient.getQueryData(queryOptions.queryKey);
 
+					// Remove review from current status cache
 					queryClient.setQueryData(
 						queryOptions.queryKey,
-						produce<typeof snapshot>((draft) => {
-							if (!draft?.data || !reviewer) return;
-
-							const food = draft.data.pendingFoodsPagination.data.find(
-								(f) => f.id === ctx.pendingFoodId
+						produce(snapshot, (draft) => {
+							if (!draft?.data) return;
+							const pagination = draft.data.pendingFoodsPagination;
+							pagination.data = pagination.data.filter(
+								(f) => f.id !== ctx.pendingFoodId
 							);
-							if (!food) return;
-
-							const isAccepted = ctx.rejectionReason === null;
-
-							food.status = isAccepted ? "APPROVED" : "REJECTED";
-							food.reviewedBy = reviewer.id;
-							food.reviewedAt = new Date().toISOString();
-							food.rejectionReason = ctx.rejectionReason ?? undefined;
 						})
 					);
 
-					return { snapshot };
+					const isAccepted = ctx.rejectionReason === null;
+					const status: PendingFoodStatus = isAccepted
+						? "APPROVED"
+						: "REJECTED";
+
+					// Build optimistic review
+					const optReview = produce(
+						snapshot?.data?.pendingFoodsPagination.data.find(
+							(f) => f.id === ctx.pendingFoodId
+						),
+						(draft) => {
+							if (!draft || !reviewer) return;
+
+							draft.status = status;
+							draft.reviewedBy = reviewer.id;
+							draft.reviewedAt = new Date().toISOString();
+							draft.rejectionReason = ctx.rejectionReason ?? undefined;
+						}
+					);
+
+					const queryOptionsByStatus = PendingFoodQueries.ByUserId.getOptions({
+						...params,
+						status
+					});
+					const snapshotByStatus = queryClient.getQueryData(
+						queryOptionsByStatus.queryKey
+					);
+
+					// Add to status cache (only if it's cached)
+					if (snapshotByStatus && optReview) {
+						queryClient.setQueryData(
+							queryOptionsByStatus.queryKey,
+							produce(snapshotByStatus, (draft) => {
+								if (!draft.data) return;
+								draft.data.pendingFoodsPagination.data.push(optReview);
+							})
+						);
+					}
+
+					if (optReview) onOptUpdate(optReview);
+
+					return {
+						snapshot,
+						snapshotByStatus,
+						queryKeyByStatus: queryOptionsByStatus.queryKey
+					};
 				}
 			}
 		},
@@ -79,13 +137,24 @@ export const useReviewMutation = (state: ReviewMutationState) => {
 
 			switch (state.searchType) {
 				case "User Type": {
-					const queryOptions = PendingFoodQueries.ByUserType.getOptions(state);
+					const { searchType, ...params } = state;
+					const queryOptions = PendingFoodQueries.ByUserType.getOptions(params);
 					queryClient.setQueryData(queryOptions.queryKey, ctx.snapshot);
 					return;
 				}
 				case "User ID": {
-					const queryOptions = PendingFoodQueries.ByUserId.getOptions(state);
+					const { searchType, ...params } = state;
+					const queryOptions = PendingFoodQueries.ByUserId.getOptions(params);
+
 					queryClient.setQueryData(queryOptions.queryKey, ctx.snapshot);
+
+					if (ctx.queryKeyByStatus) {
+						queryClient.setQueryData(
+							ctx.queryKeyByStatus,
+							ctx.snapshotByStatus
+						);
+					}
+
 					return;
 				}
 			}

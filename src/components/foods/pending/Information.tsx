@@ -1,11 +1,15 @@
 import { ActionButton } from "@/components/elements/ActionButton";
 import { NutrientsSection } from "@/components/nutrients/NutrientsSection";
 import { toPendingFoodReview } from "@/mappers/foodMappers";
-import type { FoodInformation, PendingFood } from "@/types/foodTypes";
+import type {
+	FoodInformation,
+	PendingFood,
+	PendingFoodReviewReq
+} from "@/types/foodTypes";
 import type { NutrientInFood } from "@/types/nutrientTypes";
 import {
-	getAmountPerServingView,
-	getPendingFoodStatusColorHex,
+	getAmountPerServingFmt,
+	getPendingFoodStatusUi,
 	isReviewed
 } from "@/utils/foodUtils";
 import { formatIsoDate } from "@/utils/textUtils";
@@ -14,66 +18,73 @@ import { useState } from "react";
 import { RejectionWriting } from "./RejectionWriting";
 import { ReviewInformation } from "./ReviewInformation";
 
-export const PendingFoodInformation = ({
+export const Information = ({
 	pendingFood,
-	onApprove,
-	onReject
+	onHandleReview
 }: {
 	pendingFood: PendingFood;
-	onApprove: (foodId: number) => void;
-	onReject: (foodId: number, reason: string) => void;
+	onHandleReview: (req: PendingFoodReviewReq) => void;
 }) => {
 	const [isRejecting, setIsRejecting] = useState<boolean>(false);
 	const [isReviewInfoVisible, setIsReviewInfoVisible] = useState(false);
 
-	const reviewInfo = toPendingFoodReview(pendingFood);
+	function handleApprove() {
+		onHandleReview({
+			pendingFoodId: pendingFood.id,
+			rejectionReason: null
+		});
+	}
 
 	function handleReject(reason: string) {
 		setIsRejecting(false);
-		onReject(pendingFood.id, reason);
+		onHandleReview({
+			pendingFoodId: pendingFood.id,
+			rejectionReason: reason
+		});
 	}
 
 	return (
-		<div className="flex flex-col w-90 bg-smoke/40 rounded-xl relative overflow-hidden">
-			<Header
-				pendingFood={pendingFood}
-				// onViewRejectionReason={() => setIsRejectionReasonVisible(true)}
-				onViewReviewInfo={() => setIsReviewInfoVisible(true)}
-			/>
-
-			<Body pendingFoodInformation={pendingFood.information} />
-
-			{/* Review Buttons Handlers */}
-			{!isRejecting && !isReviewed(pendingFood.status) && (
-				<div className="flex w-full pb-4 px-4 gap-2">
-					<ActionButton
-						label="Approve"
-						icon={Check}
-						bgColor="bg-dry-green"
-						onButtonClick={() => onApprove(pendingFood.id)}
-					/>
-					<ActionButton
-						label="Reject"
-						icon={X}
-						bgColor="bg-rose-600"
-						onButtonClick={() => setIsRejecting(true)}
-					/>
-				</div>
-			)}
-
-			{isReviewInfoVisible && (
-				<ReviewInformation
-					review={reviewInfo}
-					onClose={() => setIsReviewInfoVisible(false)}
+		<div>
+			<div className="flex flex-col w-90 bg-smoke/40 rounded-xl relative overflow-hidden">
+				<Header
+					pendingFood={pendingFood}
+					onViewReviewInfo={() => setIsReviewInfoVisible(true)}
 				/>
-			)}
 
-			{isRejecting && (
-				<RejectionWriting
-					onCancelRejection={() => setIsRejecting(false)}
-					onReject={(reason) => handleReject(reason)}
-				/>
-			)}
+				<Body pendingFoodInformation={pendingFood.information} />
+
+				{/* Review Buttons Handlers */}
+				{!isRejecting && !isReviewed(pendingFood.status) && (
+					<div className="flex w-full pb-4 px-4 gap-2">
+						<ActionButton
+							label="Approve"
+							icon={Check}
+							bgColor="bg-dry-green"
+							onButtonClick={handleApprove}
+						/>
+						<ActionButton
+							label="Reject"
+							icon={X}
+							bgColor="bg-rose-600"
+							onButtonClick={() => setIsRejecting(true)}
+						/>
+					</div>
+				)}
+
+				{isReviewInfoVisible && (
+					<ReviewInformation
+						review={toPendingFoodReview(pendingFood)}
+						onClose={() => setIsReviewInfoVisible(false)}
+					/>
+				)}
+
+				{isRejecting && (
+					<RejectionWriting
+						onCancelRejection={() => setIsRejecting(false)}
+						onReject={handleReject}
+					/>
+				)}
+			</div>
 		</div>
 	);
 };
@@ -85,7 +96,7 @@ const Header = ({
 	pendingFood: PendingFood;
 	onViewReviewInfo: () => void;
 }) => {
-	const statusColor = getPendingFoodStatusColorHex(pendingFood.status);
+	const { accentHex } = getPendingFoodStatusUi(pendingFood.status);
 
 	return (
 		<div
@@ -96,7 +107,7 @@ const Header = ({
 			<div className="flex flex-col items-center gap-0">
 				<p
 					style={{
-						color: statusColor
+						color: accentHex
 					}}
 					className="font-bold leading-tight"
 				>
@@ -122,7 +133,7 @@ const Body = ({
 }) => {
 	const foodBase = pendingFoodInformation.base;
 	const foodNutrients = pendingFoodInformation.nutrients;
-	const amountPerServing = getAmountPerServingView(foodBase);
+	const amountPerServing = getAmountPerServingFmt(foodBase);
 
 	const nutrients = foodNutrients.filter((fn) => fn.nutrientData.base.type === "BASIC");
 	const vitamins = foodNutrients.filter(

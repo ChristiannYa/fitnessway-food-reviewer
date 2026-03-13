@@ -1,32 +1,37 @@
 import type { FoodBase, PendingFoodStatus } from "@/types/foodTypes";
+import { Ban, CircleCheckBig, Clock12 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export const isReviewed = (status: PendingFoodStatus): boolean => status !== "PENDING";
 
-/**
- * @param status The pending food status
- * @returns tailwind color e.g., "[]-emerald-500". Prefix (text-, bg-) should be provided when used
- */
-export const getPendingFoodStatusColorTw = (status: PendingFoodStatus): string => {
-	switch (status) {
-		case "APPROVED":
-			return "emerald-500";
-		case "PENDING":
-			return "amber-500";
-		case "REJECTED":
-			return "red-500";
-	}
-};
-
-export const getPendingFoodStatusColorHex = (status: PendingFoodStatus): string => {
-	switch (status) {
-		case "APPROVED":
-			return "#10b981";
-		case "PENDING":
-			return "#f59e0b";
-		case "REJECTED":
-			return "#ef4444";
-	}
-};
-
-export const getAmountPerServingView = (food: FoodBase): string =>
+export const getAmountPerServingFmt = (food: FoodBase): string =>
 	`${food.amountPerServing} ${food.servingUnit.toLowerCase()}`;
+
+export const getPendingFoodStatusUi = (
+	status: PendingFoodStatus
+): {
+	accentTw: string;
+	accentHex: string;
+	Icon: LucideIcon;
+} => {
+	switch (status) {
+		case "APPROVED":
+			return {
+				accentTw: "emerald-500",
+				accentHex: "#10b981",
+				Icon: CircleCheckBig
+			};
+		case "PENDING":
+			return {
+				accentTw: "amber-500",
+				accentHex: "#f59e0b",
+				Icon: Clock12
+			};
+		case "REJECTED":
+			return {
+				accentTw: "red-500",
+				accentHex: "#ef4444",
+				Icon: Ban
+			};
+	}
+};
