@@ -13,8 +13,8 @@ export const Home = () => {
 
 	return (
 		<div className="min-h-screen bg-charcoal text-mist flex flex-col items-center pt-12">
-			<div className="flex flex-col items-center gap-2 w-80">
-				<div className="flex flex-col items-center gap-2">
+			<div className="flex flex-col items-center gap-2 w-fit">
+				<div className="flex flex-col items-center gap-2 w-full">
 					<UserScope
 						currentScope={currentUserScope}
 						onScopeSelection={(scope) =>

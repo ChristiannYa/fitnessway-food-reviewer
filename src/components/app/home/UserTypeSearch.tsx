@@ -12,7 +12,7 @@ import type {
 import { USER_TYPE } from "@/types/userTypes";
 import type { UserType } from "@/types/userTypes";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AvailablePages } from "./AvailablePages";
 import { Grid } from "@/components/foods/pending/Grid";
 import { Information } from "@/components/foods/pending/Information";
