@@ -1,3 +1,4 @@
+import { ActionButton } from "@/components/elements/ActionButton";
 import { USER_SCOPE } from "@/types/userTypes";
 import type { UserScope as TUserScope } from "@/types/userTypes";
 
@@ -6,7 +7,7 @@ export const UserScope = ({
 	onScopeSelection
 }: {
 	currentScope: TUserScope | null;
-	onScopeSelection: (option: TUserScope) => void;
+	onScopeSelection: (scope: TUserScope) => void;
 }) => {
 	return (
 		<div className="flex gap-x-4">
@@ -14,14 +15,13 @@ export const UserScope = ({
 				const isSelected = currentScope === scope;
 
 				return (
-					<button
+					<ActionButton
 						key={scope}
-						onClick={() => onScopeSelection(scope)}
-						className={`py-2 px-3 rounded-md transition-colors text-white relative
-                                    ${isSelected ? "bg-dry-green" : "bg-smoke"} cursor-pointer`}
-					>
-						{scope}
-					</button>
+						label={scope}
+						onButtonClick={() => onScopeSelection(scope)}
+						bgColor={isSelected ? "bg-dry-green" : "bg-smoke"}
+						isActive={isSelected}
+					/>
 				);
 			})}
 		</div>

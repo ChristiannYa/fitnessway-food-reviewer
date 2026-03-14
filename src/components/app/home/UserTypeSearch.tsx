@@ -1,22 +1,24 @@
-import { PendingFoodQueries } from "@/hooks/queries/foodQueries";
-import { isStringNullOrEmpty } from "@/utils/textUtils";
-import { useState } from "react";
+import { SearchBar } from "@/components/elements/SearchBar";
 import { Spinner } from "@/components/elements/Spinner";
-import { Grid } from "@/components/foods/pending/Grid";
-import { AvailablePages } from "@/components/app/home/AvailablePages";
 import { pagination } from "@/constants";
 import { useReviewMutation } from "@/hooks/mutations/foodMutations";
+import { PendingFoodQueries } from "@/hooks/queries/foodQueries";
+import { useSearch } from "@/hooks/useSearch";
 import type {
 	PendingFood,
 	PendingFoodsReqParams,
 	PendingFoodStatus
 } from "@/types/foodTypes";
+import { USER_TYPE } from "@/types/userTypes";
+import type { UserType } from "@/types/userTypes";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { AvailablePages } from "./AvailablePages";
+import { Grid } from "@/components/foods/pending/Grid";
 import { Information } from "@/components/foods/pending/Information";
-import { SearchBar } from "@/components/elements/SearchBar";
-import { useSearch } from "@/hooks/useSearch";
+import { getUserTypeIcon } from "@/utils/userUtils";
 
-export const UserIdSearch = ({
+export const UserTypeSearch = ({
 	isVisible,
 	currentPendingStatus
 }: {
@@ -26,31 +28,34 @@ export const UserIdSearch = ({
 	const queryClient = useQueryClient();
 
 	const [offset, setOffset] = useState(0);
-	const [userIdInput, setUserIdInput] = useState("");
+	const [selectedUserType, setSelectedUserType] = useState<UserType | null>(null);
 	const [selectedFood, setSelectedFood] = useState<PendingFood | null>(null);
 
-	const [userIdSearched, setUserIdSearched] = useState("");
+	const [userTypeSearched, setUserTypeSearched] = useState<UserType>("USER");
 	const [statusFilterInSearch, setStatusFilterInSearch] =
 		useState<PendingFoodStatus | null>(null);
 
-	const reqParams: PendingFoodsReqParams<{ userId: string }> = {
-		userId: userIdSearched,
-		offset,
-		status: statusFilterInSearch ?? undefined
-	};
+	const reqParams: PendingFoodsReqParams<{ userType: UserType }> = useMemo(
+		() => ({
+			userType: userTypeSearched,
+			offset,
+			status: statusFilterInSearch ?? undefined
+		}),
+		[userTypeSearched, offset, statusFilterInSearch]
+	);
 
 	const {
 		isError: pfResError,
 		isFetching: pfFetching,
 		data: pfData,
 		refetch: pfRefetch
-	} = PendingFoodQueries.ByUserId.use(reqParams, { enabled: false });
+	} = PendingFoodQueries.ByUserType.use(reqParams, { enabled: false });
 
 	const reviewMutation = useReviewMutation(
 		{
 			offset,
-			searchType: "User ID",
-			userId: userIdSearched,
+			searchType: "User Type",
+			userType: userTypeSearched,
 			status: statusFilterInSearch ?? undefined
 		},
 		(optReview) => {
@@ -66,9 +71,11 @@ export const UserIdSearch = ({
 	const queryData = pfData?.data?.pendingFoodsPagination;
 
 	function handleSearch() {
+		if (selectedUserType === null) return;
+
 		setOffset(0);
 		setStatusFilterInSearch(currentPendingStatus);
-		setUserIdSearched(userIdInput);
+		setUserTypeSearched(selectedUserType);
 	}
 
 	function handlePageChange(page: number) {
@@ -78,9 +85,9 @@ export const UserIdSearch = ({
 	useSearch({
 		deps: reqParams,
 		use: isVisible,
-		mountGuard: isStringNullOrEmpty(reqParams.userId),
+		mountGuard: selectedUserType === null,
 		cache: queryClient.getQueryData(
-			PendingFoodQueries.ByUserId.getOptions(reqParams).queryKey
+			PendingFoodQueries.ByUserType.getOptions(reqParams).queryKey
 		),
 		refetchFn: pfRefetch
 	});
@@ -91,24 +98,36 @@ export const UserIdSearch = ({
 		<div className="flex flex-col gap-2">
 			{searchFailed && (
 				<p className="text-red-500 text-center">
-					Error fetching foods by User ID
+					Error fetching foods by User Type
 				</p>
 			)}
 
-			<div className="flex flex-col mx-auto gap-2 w-96">
-				<input
-					type="text"
-					name="user_id"
-					id="user_id"
-					placeholder="User ID"
-					value={userIdInput}
-					onChange={(e) => setUserIdInput(e.target.value)}
-					className="px-3 py-2 text-center border border-smoke focus:ring-1 
-                             focus:ring-dry-green focus:outline-0"
-				/>
+			<div className="flex flex-col mx-auto gap-4 w-90">
+				<div className="flex justify-center gap-6">
+					{Object.values(USER_TYPE).map((type) => {
+						const isActive = type === selectedUserType;
+						const Icon = getUserTypeIcon(type);
+
+						return (
+							<button
+								key={type}
+								onClick={() =>
+									setSelectedUserType(
+										selectedUserType === type ? null : type
+									)
+								}
+								className={`${isActive ? "font-extrabold" : "font-thin hover:text-white"}
+                                            flex items-center gap-0.5 py-1 cursor-pointer`}
+							>
+								<Icon size={14} strokeWidth={isActive ? 3 : 1} />
+								{type}
+							</button>
+						);
+					})}
+				</div>
 				<SearchBar
 					handleSearch={handleSearch}
-					disabled={isStringNullOrEmpty(userIdInput)}
+					disabled={selectedUserType === null}
 				/>
 			</div>
 
@@ -125,7 +144,11 @@ export const UserIdSearch = ({
 						currentPage={queryData.currentPage}
 						handlePageChange={handlePageChange}
 					/>
-					<Grid pendingFoods={queryData.data} onFoodClick={setSelectedFood} />
+					<Grid
+						pendingFoods={queryData.data}
+						onFoodClick={setSelectedFood}
+						withUserId={true}
+					/>
 				</>
 			)}
 
@@ -139,6 +162,7 @@ export const UserIdSearch = ({
 						<Information
 							pendingFood={selectedFood}
 							onHandleReview={(req) => reviewMutation.mutate(req)}
+							withUserId={true}
 						/>
 					</div>
 				</div>

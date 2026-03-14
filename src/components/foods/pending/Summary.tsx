@@ -4,10 +4,12 @@ import { formatIsoDate } from "@/utils/textUtils";
 
 export const Summary = ({
 	pendingFood,
-	onFoodClick
+	onFoodClick,
+	withUserId = false
 }: {
 	pendingFood: PendingFood;
 	onFoodClick: (food: PendingFood) => void;
+	withUserId?: boolean;
 }) => {
 	const foodBase = pendingFood.information.base;
 	const amountPerServing = getAmountPerServingFmt(pendingFood.information.base);
@@ -20,6 +22,9 @@ export const Summary = ({
                        cursor-pointer rounded-lg text-lg"
 		>
 			<p className="text-center">{formatIsoDate(pendingFood.createdAt)}</p>
+			{withUserId && (
+				<p className="text-center text-xs opacity-70">{pendingFood.createdBy}</p>
+			)}
 			<span className="mt-1 w-full border-t border-dotted border-smoke"></span>
 
 			<div className="flex flex-col px-3 pt-3 leading-snug">

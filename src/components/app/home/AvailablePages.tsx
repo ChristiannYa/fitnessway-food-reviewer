@@ -15,7 +15,7 @@ export const AvailablePages = ({
 				<button
 					key={page}
 					onClick={() => handlePageChange(page)}
-					className={`w-9 h-9 rounded-full font-semibold leading-none cursor-pointer
+					className={`w-8 h-8 rounded-full font-semibold leading-none cursor-pointer
                                 ${page === currentPage ? "bg-dry-green" : "bg-smoke"}`}
 				>
 					{page}

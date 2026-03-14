@@ -3,10 +3,12 @@ import { Summary } from "./Summary";
 
 export const Grid = ({
 	pendingFoods,
-	onFoodClick
+	onFoodClick,
+	withUserId = false
 }: {
 	pendingFoods: PendingFood[];
 	onFoodClick: (food: PendingFood) => void;
+	withUserId?: boolean;
 }) => {
 	if (pendingFoods.length === 0) {
 		return <p className="text-center">No foods available</p>;
@@ -21,6 +23,7 @@ export const Grid = ({
 							<Summary
 								pendingFood={pendingFood}
 								onFoodClick={onFoodClick}
+								withUserId={withUserId}
 							/>
 						</div>
 					);

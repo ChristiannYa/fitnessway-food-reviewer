@@ -13,16 +13,18 @@ import {
 	isReviewed
 } from "@/utils/foodUtils";
 import { formatIsoDate } from "@/utils/textUtils";
-import { Check, X } from "lucide-react";
-import { useState } from "react";
+import { Check, MoreHorizontal, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { RejectionWriting } from "./RejectionWriting";
 import { ReviewInformation } from "./ReviewInformation";
 
 export const Information = ({
 	pendingFood,
-	onHandleReview
+	onHandleReview,
+	withUserId
 }: {
 	pendingFood: PendingFood;
+	withUserId?: boolean;
 	onHandleReview: (req: PendingFoodReviewReq) => void;
 }) => {
 	const [isRejecting, setIsRejecting] = useState<boolean>(false);
@@ -71,6 +73,12 @@ export const Information = ({
 					</div>
 				)}
 
+				{withUserId && (
+					<p className="pb-4 px-4 text-center text-sm opacity-70">
+						{pendingFood.createdBy}
+					</p>
+				)}
+
 				{isReviewInfoVisible && (
 					<ReviewInformation
 						review={toPendingFoodReview(pendingFood)}
@@ -104,7 +112,7 @@ const Header = ({
                        border-dotted text-lg"
 		>
 			<p>{formatIsoDate(pendingFood.createdAt)}</p>
-			<div className="flex flex-col items-center gap-0">
+			<div className="flex flex-col items-center">
 				<p
 					style={{
 						color: accentHex
@@ -131,6 +139,10 @@ const Body = ({
 }: {
 	pendingFoodInformation: FoodInformation<NutrientInFood>;
 }) => {
+	const nameRef = useRef<HTMLParagraphElement>(null);
+	const [isNameTruncated, setIsNameTruncated] = useState(false);
+	const [isFullNameVisible, setIsFullNameVisible] = useState(false);
+
 	const foodBase = pendingFoodInformation.base;
 	const foodNutrients = pendingFoodInformation.nutrients;
 	const amountPerServing = getAmountPerServingFmt(foodBase);
@@ -143,12 +155,32 @@ const Body = ({
 		(fn) => fn.nutrientData.base.type === "MINERAL"
 	);
 
+	function handleNameClick() {
+		if (!isNameTruncated) return;
+		setIsFullNameVisible((prev) => !prev);
+	}
+
+	useEffect(() => {
+		const el = nameRef.current;
+		if (el) {
+			setIsNameTruncated(el.scrollWidth > el.clientWidth);
+		}
+	}, [pendingFoodInformation]);
+
 	return (
 		<div className="px-4 pt-3 pb-4 gap-2 flex flex-col">
 			{/* Base Information */}
-			<div className="text-lg leading-tight truncate">
-				<p className="font-semibold">{foodBase.name}</p>
-				<p className="opacity-80">{foodBase.brand}</p>
+			<div className="text-lg leading-tight pb-2">
+				<p
+					ref={nameRef}
+					onClick={handleNameClick}
+					className={`${isNameTruncated ? "cursor-pointer" : ""}
+                               ${isFullNameVisible ? "" : "truncate"}
+                               font-semibold`}
+				>
+					{foodBase.name}
+				</p>
+				<p className="opacity-80 truncate">{foodBase.brand}</p>
 				<p className="opacity-80">{amountPerServing}</p>
 			</div>
 

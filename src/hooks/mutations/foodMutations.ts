@@ -58,10 +58,70 @@ export const useReviewMutation = (
 		onMutate: async (ctx) => {
 			switch (state.searchType) {
 				case "User Type": {
+					const { searchType, ...params } = state;
+
+					const queryOptions = PendingFoodQueries.ByUserType.getOptions(params);
+					const snapshot = queryClient.getQueryData(queryOptions.queryKey);
+
+					// Remove from current status cache
+					queryClient.setQueryData(
+						queryOptions.queryKey,
+						produce(snapshot, (draft) => {
+							if (!draft?.data) return;
+							const pagination = draft.data.pendingFoodsPagination;
+							pagination.data = pagination.data.filter(
+								(f) => f.id !== ctx.pendingFoodId
+							);
+						})
+					);
+
+					const isAccepted = ctx.rejectionReason === null;
+					const status: PendingFoodStatus = isAccepted
+						? "APPROVED"
+						: "REJECTED";
+
+					// Build optimistic review
+					const optReview = produce(
+						snapshot?.data?.pendingFoodsPagination.data.find(
+							(f) => f.id === ctx.pendingFoodId
+						),
+						(draft) => {
+							if (!draft || !reviewer) return;
+
+							draft.status = status;
+							draft.reviewedBy = reviewer.id;
+							draft.reviewedAt = new Date().toISOString();
+							draft.rejectionReason = ctx.rejectionReason ?? undefined;
+						}
+					);
+
+					const queryOptionsByStatus = PendingFoodQueries.ByUserType.getOptions(
+						{
+							...params,
+							status
+						}
+					);
+					const snapshotByStatus = queryClient.getQueryData(
+						queryOptionsByStatus.queryKey
+					);
+
+					// Add to status cache (only if its ached)
+					if (snapshotByStatus && optReview) {
+						queryClient.setQueryData(
+							queryOptionsByStatus.queryKey,
+							produce(snapshotByStatus, (draft) => {
+								if (!draft.data) return;
+								draft.data.pendingFoodsPagination.data.push(optReview);
+							})
+						);
+					}
+
+					if (optReview) onOptUpdate(optReview);
+
 					return {
-						snapshot: undefined,
-						snapshotByStatus: undefined,
-						queryKeyByStatus: undefined
+						snapshot,
+						snapshotByStatus,
+						queryKeyByStatus: queryOptionsByStatus.queryKey
 					};
 				}
 				case "User ID": {
@@ -139,7 +199,15 @@ export const useReviewMutation = (
 				case "User Type": {
 					const { searchType, ...params } = state;
 					const queryOptions = PendingFoodQueries.ByUserType.getOptions(params);
+
 					queryClient.setQueryData(queryOptions.queryKey, ctx.snapshot);
+
+					if (ctx.queryKeyByStatus) {
+						queryClient.setQueryData(
+							ctx.queryKeyByStatus,
+							ctx.snapshotByStatus
+						);
+					}
 					return;
 				}
 				case "User ID": {
