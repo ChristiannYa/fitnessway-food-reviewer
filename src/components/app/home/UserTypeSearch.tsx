@@ -17,6 +17,7 @@ import { AvailablePages } from "./AvailablePages";
 import { Grid } from "@/components/foods/pending/Grid";
 import { Information } from "@/components/foods/pending/Information";
 import { getUserTypeIcon } from "@/utils/userUtils";
+import { isStringNullOrEmpty } from "@/utils/textUtils";
 
 export const UserTypeSearch = ({
 	isVisible,
@@ -31,18 +32,15 @@ export const UserTypeSearch = ({
 	const [selectedUserType, setSelectedUserType] = useState<UserType | null>(null);
 	const [selectedFood, setSelectedFood] = useState<PendingFood | null>(null);
 
-	const [userTypeSearched, setUserTypeSearched] = useState<UserType>("USER");
+	const [userTypeSearched, setUserTypeSearched] = useState<string>("");
 	const [statusFilterInSearch, setStatusFilterInSearch] =
 		useState<PendingFoodStatus | null>(null);
 
-	const reqParams: PendingFoodsReqParams<{ userType: UserType }> = useMemo(
-		() => ({
-			userType: userTypeSearched,
-			offset,
-			status: statusFilterInSearch ?? undefined
-		}),
-		[userTypeSearched, offset, statusFilterInSearch]
-	);
+	const reqParams: PendingFoodsReqParams<{ userType: UserType }> = {
+		userType: userTypeSearched as UserType,
+		offset,
+		status: statusFilterInSearch ?? undefined
+	};
 
 	const {
 		isError: pfResError,
@@ -55,7 +53,7 @@ export const UserTypeSearch = ({
 		{
 			offset,
 			searchType: "User Type",
-			userType: userTypeSearched,
+			userType: userTypeSearched as UserType,
 			status: statusFilterInSearch ?? undefined
 		},
 		(optReview) => {
@@ -85,7 +83,7 @@ export const UserTypeSearch = ({
 	useSearch({
 		deps: reqParams,
 		use: isVisible,
-		mountGuard: selectedUserType === null,
+		mountGuard: isStringNullOrEmpty(userTypeSearched),
 		cache: queryClient.getQueryData(
 			PendingFoodQueries.ByUserType.getOptions(reqParams).queryKey
 		),
