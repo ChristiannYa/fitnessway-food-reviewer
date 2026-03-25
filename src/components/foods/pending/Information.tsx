@@ -6,14 +6,13 @@ import type {
 	PendingFood,
 	PendingFoodReviewReq
 } from "@/types/foodTypes";
-import type { NutrientInFood } from "@/types/nutrientTypes";
 import {
 	getAmountPerServingFmt,
 	getPendingFoodStatusUi,
 	isReviewed
 } from "@/utils/foodUtils";
 import { formatIsoDate } from "@/utils/textUtils";
-import { Check, MoreHorizontal, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { RejectionWriting } from "./RejectionWriting";
 import { ReviewInformation } from "./ReviewInformation";
@@ -137,7 +136,7 @@ const Header = ({
 const Body = ({
 	pendingFoodInformation: pendingFoodInformation
 }: {
-	pendingFoodInformation: FoodInformation<NutrientInFood>;
+	pendingFoodInformation: FoodInformation;
 }) => {
 	const nameRef = useRef<HTMLParagraphElement>(null);
 	const [isNameTruncated, setIsNameTruncated] = useState(false);
@@ -146,14 +145,6 @@ const Body = ({
 	const foodBase = pendingFoodInformation.base;
 	const foodNutrients = pendingFoodInformation.nutrients;
 	const amountPerServing = getAmountPerServingFmt(foodBase);
-
-	const nutrients = foodNutrients.filter((fn) => fn.nutrientData.base.type === "BASIC");
-	const vitamins = foodNutrients.filter(
-		(fn) => fn.nutrientData.base.type === "VITAMIN"
-	);
-	const minerals = foodNutrients.filter(
-		(fn) => fn.nutrientData.base.type === "MINERAL"
-	);
 
 	function handleNameClick() {
 		if (!isNameTruncated) return;
@@ -185,9 +176,15 @@ const Body = ({
 			</div>
 
 			{/* Nutrients */}
-			{nutrients.length > 0 && <NutrientsSection nutrientsInFood={nutrients} />}
-			{vitamins.length > 0 && <NutrientsSection nutrientsInFood={vitamins} />}
-			{minerals.length > 0 && <NutrientsSection nutrientsInFood={minerals} />}
+			{foodNutrients.basic.length > 0 && 
+                <NutrientsSection nutrientsInFood={foodNutrients.basic} />
+            }
+			{foodNutrients.vitamins.length > 0 && 
+                <NutrientsSection nutrientsInFood={foodNutrients.vitamins} />
+            }
+			{foodNutrients.minerals.length > 0 && 
+                <NutrientsSection nutrientsInFood={foodNutrients.minerals} />
+            }
 		</div>
 	);
 };

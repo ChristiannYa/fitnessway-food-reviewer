@@ -4,6 +4,12 @@ export const NUTRIENT_TYPE = ["BASIC", "VITAMIN", "MINERAL"] as const;
 
 export type NutrientType = (typeof NUTRIENT_TYPE)[number];
 
+export type NutrientsByType = {
+    basic: NutrientInFood[];
+    vitamins: NutrientInFood[];
+    minerals: NutrientInFood[];
+}
+
 export type NutrientBase = {
 	id: number;
 	name: string;

@@ -1,5 +1,5 @@
 import type { PaginationResult } from "@/types/appTypes";
-import type { NutrientEntry, NutrientInFood } from "@/types/nutrientTypes";
+import type { NutrientsByType } from "@/types/nutrientTypes";
 import type { UserType } from "./userTypes";
 
 export const SERVING_UNIT = ["G", "MG", "MCG", "ML", "OZ", "KCAL"] as const;
@@ -17,14 +17,14 @@ export type FoodBase = {
 	servingUnit: ServingUnit;
 };
 
-export type FoodInformation<N extends NutrientEntry> = {
+export type FoodInformation = {
 	base: FoodBase;
-	nutrients: N[];
+	nutrients: NutrientsByType;
 };
 
 export type AppFood = {
 	id: number;
-	information: FoodInformation<NutrientInFood>;
+	information: FoodInformation;
 	createdBy?: string;
 	createdAt: string;
 	updatedAt?: string;
@@ -32,7 +32,7 @@ export type AppFood = {
 
 export type PendingFood = {
 	id: number;
-	information: FoodInformation<NutrientInFood>;
+	information: FoodInformation;
 	status: PendingFoodStatus;
 	createdBy?: string;
 	reviewedBy?: string;
